@@ -6,13 +6,34 @@ var glob = require("glob");
 
 var File = Base.extend({
 	instantiate: function(){
-		// array of matches
-		this.list = globule.find.apply(globule, arguments);
+		this.globCallback = this.globCallback.bind(this);
+		glob.apply(null, [].slice.call(arguments).concat([this.globCallback]));
+
+		this.unready();
+	},
+	unready: function(){
+		this.ready = new Promise((resolve, reject) => {
+			this.resolve = resolve;
+			this.reject = reject;
+		});
+	},
+	then: function(cb, eb){
+		return this.ready.apply(this.ready, arguments);
+	},
+	globCallback: function(err, files){
+		if (err){
+			this.reject(err);
+		}
+		this.list = files;
+		this.initialize();
+	},
+	initialize: function(){
 
 	},
+	concat: function(fileOrStr){
+		if (is.str(fileOrStr)){
 
-	initialize: function(path){
-
+		}
 	},
 	write: function(path){
 		if (!path){
