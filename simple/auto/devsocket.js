@@ -14,4 +14,6 @@ ws.addEventListener("message", function(e){
 	}
 });
 
+return ws
+
 }); // yee haw
