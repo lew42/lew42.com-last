@@ -1,5 +1,5 @@
 (function(){
-
+/*log.js */
 var console_methods = ["log", "group", "debug", "trace", "error", "warn", "info", "time", "timeEnd"];
 
 var g = function(str, fn){

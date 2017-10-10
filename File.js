@@ -18,7 +18,7 @@ var File = Base.extend({
 		});
 	},
 	then: function(cb, eb){
-		return this.ready.apply(this.ready, arguments);
+		return this.ready.then(cb.bind(this), eb.bind(this));
 	},
 	globCallback: function(err, files){
 		if (err){

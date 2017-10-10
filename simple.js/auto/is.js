@@ -1,7 +1,5 @@
-;(function(){
-
-
-var is = window.is = {
+define("is", function(){
+var is = {
 	arr: function(value){
 		return toString.call(value) === '[object Array]';
 	},
@@ -41,4 +39,5 @@ var is = window.is = {
 	}
 };
 
-})();
+return is;
+});

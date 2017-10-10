@@ -248,10 +248,6 @@ define("Base", function(){
 	return Base;
 });
 
-define("is", function(){
-	return is;
-});
-
 define("log", function(){
 	return log;
 });
