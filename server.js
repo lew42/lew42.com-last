@@ -7,7 +7,7 @@ var express = require('express')
 var app = express()
 var root = __dirname + "/lew42.github.io";
 
-require("./simple.js/index.js");
+require("./simple/index.js");
 
 app.use(express.static(root));
 app.use(fallback( root + "/index.html"));
