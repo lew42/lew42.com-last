@@ -9,6 +9,8 @@ var root = __dirname + "/lew42.github.io";
 
 require("./simple/index.js");
 
+app.use("/simple/", express.static(__dirname + "/simple/docs"));
+app.use("/simple/", fallback( __dirname + "/simple/docs/index.html"))
 app.use(express.static(root));
 app.use(fallback( root + "/index.html"));
 

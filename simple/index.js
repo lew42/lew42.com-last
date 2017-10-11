@@ -13,13 +13,13 @@ var fs = require("fs");
 var update = function(){
 	console.log("updating...");
 	var bundle = "";
-	var define = fs.readFileSync(__dirname + "/define.js");
-	var log = fs.readFileSync(__dirname + "/log.js");
+	var define = fs.readFileSync(__dirname + "/docs/define.js");
+	var log = fs.readFileSync(__dirname + "/docs/log.js");
 	bundle = define + log + ");" + "\r\n"; 
 	
-	var files = fs.readdirSync(__dirname + "/auto/");
+	var files = fs.readdirSync(__dirname + "/docs/modules/");
 
-	files = files.map(file => __dirname + "/auto/" + file);
+	files = files.map(file => __dirname + "/docs/modules/" + file);
 	files.forEach((file) => bundle += "\r\n\r\n\r\n/*" + file + "*/\r\n" + fs.readFileSync(file));
 	// concat(["./define.js"].concat(files)).then((str) => {
 	// 	str += log + ");"
