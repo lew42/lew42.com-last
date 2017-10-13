@@ -21,4 +21,4 @@ Base.extend = function(){
 	return Ext;
 };
 
-})(window.define, window.define.assign);
+})(define, define.assign);

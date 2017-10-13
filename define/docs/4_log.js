@@ -1,4 +1,5 @@
 (function(define){
+
 var console_methods = ["log", "group", "debug", "trace", "error", "warn", "info", "time", "timeEnd"];
 
 var g = function(str, fn){
@@ -69,4 +70,5 @@ enabled_logger.off.on = enabled_logger;
 
 define.log = enabled_logger;
 define.debug = define.log.off;
-})(window.define)
+
+})(define)

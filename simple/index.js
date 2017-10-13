@@ -26,6 +26,8 @@ var update = function(){
 	// 	fs.writeFileSync("../lew42.github.io/simple.js", str);
 	// });
 	fs.writeFileSync(__dirname + "/../lew42.github.io/simple.js", bundle);
+	fs.writeFileSync(__dirname + "/public/simple.js", bundle);
+	fs.writeFileSync(__dirname + "/docs/simple.js", bundle);
 	// console.log("done updating");
 };
 
