@@ -1,38 +1,17 @@
-var http = require("http");
-var fs = require("fs");
-var chokidar = require("chokidar");
-var WebSocket = require("ws");
-var fallback = require('express-history-api-fallback')
 var express = require('express')
 var app = express()
+var livereload = require("./livereload")(app);
 var root = __dirname + "/lew42.github.io";
 
-require("./simple/index.js");
+// this will trigger a build for each
+// so build define first, then simple
+var define = require("./define/server.js")(app);
+var simple = require("./simple/server.js")(app);
 
-app.use("/simple/", express.static(__dirname + "/simple/docs"));
-app.use("/simple/", fallback( __dirname + "/simple/docs/index.html"))
 app.use(express.static(root));
-app.use(fallback( root + "/index.html"));
-
-var server = http.createServer(app);
-var wss = new WebSocket.Server({
-	perMessageDeflate: false,
-	server: server
-});
-
-wss.on("connection", function(ws){
-	console.log("connected");
-
-	chokidar.watch(root).on("change", () => {
-		console.log("changed --> reload");
-		ws.send("reload", (err) => {
-			if (err) console.log("error");
-			else console.log("reload message sent");
-		});
-	});
-});
 
 
-server.listen(80, function () {
-  console.log('Example app listening on port 80!')
+
+app.listen(80, function () {
+  console.log('Listening on port 80!')
 });

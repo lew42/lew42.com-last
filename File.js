@@ -4,6 +4,14 @@ var Base = require("./Base");
 var is = require("./is");
 var glob = require("glob");
 
+// var File = require("../File");
+
+// File("./define.js")
+// 	.concat(File("./log.js"))
+// 	.concat(");")
+// 	.concat(File("./auto/*").join())
+// 	.write("../lew42.github.io/simple.js");
+
 var File = Base.extend({
 	instantiate: function(){
 		this.globCallback = this.globCallback.bind(this);
