@@ -1,5 +1,5 @@
 // define.debug = define.debug.on;
-define(["View/", "View/View.tests.js"], function(View){
+define(["View", "View/View.test.js"], function(View){
 
-console.log("/View/");
+	View.test(View);
 })

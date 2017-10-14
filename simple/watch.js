@@ -1,4 +1,8 @@
 var chokidar = require("chokidar");
 var build = require("./build");
-debugger;
-chokidar.watch(__dirname + "/docs").on("change", build);
+
+module.exports = function(livereload){
+	chokidar.watch(__dirname + "/docs").on("change", function(){
+		build(livereload);
+	});
+};

@@ -2,7 +2,7 @@ var http = require("http");
 var chokidar = require("chokidar");
 var WebSocket = require("ws");
 
-var start = module.exports = function(app, path){
+var livereload = module.exports = function(app, path){
 	if (!app)
 		throw "need an app";
 
@@ -16,11 +16,18 @@ var start = module.exports = function(app, path){
 		console.log("connected");
 
 		chokidar.watch(path).on("change", () => {
-			console.log("something changed, sending reload message");
-			ws.send("reload", (err) => {
-				if (err) console.log("livereload transmit error");
-				else console.log("reload message sent");
-			});
+			if (livereload.block){
+				console.log("blocking a reload");
+			} else {
+				
+				console.log("something changed, sending reload message");
+				ws.send("reload", (err) => {
+					if (err) console.log("livereload transmit error");
+					else console.log("reload message sent");
+				});
+			}
 		});
 	});
+
+	return server;
 };

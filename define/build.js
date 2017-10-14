@@ -3,7 +3,8 @@ var fs = require("fs");
 var basePath = __dirname + "/docs/";
 
 var getFile = function(file){
-	return "// " + file + "\r\n" + fs.readFileSync(basePath + file, "utf8") + "\r\n\r\n\r\n\r\n";
+	return "// " + file + "\r\n" + 
+		fs.readFileSync(basePath + file, "utf8") + "\r\n\r\n\r\n\r\n";
 };
 
 var load = fs.readFileSync.bind(fs);
@@ -21,7 +22,7 @@ var build = module.exports = function(){
 
 	save(__dirname + "/../lew42.github.io/define.js", bundle);
 	save(__dirname + "/../simple/docs/define.js", bundle);
-	save(__dirname + "/docs/define.js", bundle);
+	save(__dirname + "/docs/built/define.js", bundle);
 
 	console.log("done building define.js");
 };

@@ -1,6 +1,6 @@
 (function(define){
 
-	var console_methods = ["log", "group", "debug", "trace", "error", "warn", "info", "time", "timeEnd"];
+	var console_methods = ["log", "group", "debug", "trace", "error", "warn", "info", "time", "timeEnd", "dir"];
 
 	var g = function(str, fn){
 		this.group(str);

@@ -1,4 +1,4 @@
-define("View/", ["Base2/", "is"], function(Base2, is){
+define("View", ["Base2"], function(Base2){
 
 var View = Base2.extend({
 	instantiate: function(){

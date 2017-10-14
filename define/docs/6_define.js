@@ -61,13 +61,20 @@
 		},
 		resolve: function(id){
 			var parts = id.split("/"); // id could be //something.com/something/?
+
+			// change this to default mimic
+			// require "thing" --> thing/thing.js
+			// require "thing.js" --> thing.js
+			// require "thing/" --> thing/index?
 			
+			// "thing/"
 			if (id[id.length-1] === "/"){
-				// ends in "/", mimic last part
+				// ends in "/", mimic last part --> "thing/thing.js"
 				id = id + parts[parts.length-2] + ".js";
+
+			// does not contain ".js", "thing"
 			} else if (parts[parts.length-1].indexOf(".js") < 0){
-				// only supports .js files
-				id = id + ".js";
+				id = id + "/" + parts[parts.length-1] + ".js";
 			}
 
 			// convert non-absolute paths to moduleRoot paths

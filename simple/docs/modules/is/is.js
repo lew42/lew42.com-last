@@ -1,5 +1,5 @@
 define("is", function(){
-	
+
 	var is = {
 		arr: function(value){
 			return toString.call(value) === '[object Array]';
@@ -41,4 +41,5 @@ define("is", function(){
 	};
 
 	return is;
+
 });
