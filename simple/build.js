@@ -3,6 +3,8 @@ var fs = require("fs");
 var basePath = __dirname + "/docs/";
 
 var getFile = function(file){
+	debugger;
+	console.log(basePath + file, fs.readFileSync(basePath+file));
 	return 
 		"// " + file + "\r\n" + // a comment with the filename
 			fs.readFileSync(basePath + file, "utf8") + "\r\n\r\n\r\n\r\n";
