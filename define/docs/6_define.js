@@ -36,6 +36,7 @@
 		get: function(id){
 			return (define.modules[id] = define.modules[id] || new define.Module(id));
 		},
+		/// "impure" ?
 		args: function(argu){
 			var arg, args = {};
 			for (var i = 0; i < argu.length; i++){
@@ -46,6 +47,8 @@
 					args.deps = arg;
 				else if (typeof arg === "function")
 					args.factory = arg;
+				else if (typeof arg === "object")
+					assign.call(args, arg); /// NOTE: external reference to `assign()`
 				else
 					console.error("whoops");
 			}
