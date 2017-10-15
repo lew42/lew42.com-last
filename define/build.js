@@ -16,7 +16,7 @@ var build = module.exports = function(){
 		getFile("1_define_root.js") +
 		getFile("2_assign.js") +
 		getFile("3_Base.js") +
-		getFile("4_log.js") +
+		getFile("4_logger.js") +
 		getFile("5_Module.js") +
 		getFile("6_define.js");
 

@@ -1,4 +1,4 @@
-define("Base2", ["Base"], function(Base){
+define("Base2", ["Base"], {log: true}, function(Base){
 
 	var Base2 = Base.extend({
 		log: log.off, // log is globalized by simple/modules/Base
