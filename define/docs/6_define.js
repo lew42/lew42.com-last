@@ -24,7 +24,7 @@
 
 			define.delayRequests();
 
-			return module.define(args.factory, args.deps);
+			return module.define(args);
 		},
 		delayRequests: function(){
 			define.debug.time("define.requests timeout");
