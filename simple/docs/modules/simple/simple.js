@@ -13,9 +13,9 @@ function(is, mixin, Base2, View, Test, Server){
 	window.View = View;
 	window.Test = Test;
 
-	// window.server = new Server({
-	// 	log: true
-	// });
+	window.server = new Server({
+		log: true
+	});
 
 	// server.log("log");
 	// server.log.info("info");

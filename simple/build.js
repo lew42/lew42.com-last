@@ -7,6 +7,11 @@ var getFile = function(file){
 		fs.readFileSync(basePath + file, "utf8") + "\r\n\r\n\r\n\r\n";
 };
 
+var getModule = function(file){
+	return getFile("modules/" + file + "/" + file + ".js")
+}
+
+
 var load = fs.readFileSync.bind(fs);
 var save = fs.writeFileSync.bind(fs);
 
@@ -21,6 +26,11 @@ var build = module.exports = function(livereload){
 	var bundle = 
 		getFile("define.js");
 
+	[ "is", "Base"].forEach((file) => bundle += getModule(file)); 
+
+	bundle += getFile("modules/mixin/events.js");
+
+	["mixin", "Base2", "View", "Test", "Server", "simple"].forEach((file) => bundle += getModule(file));
 	// console.log(bundle);
 
 	save(__dirname + "/../lew42.github.io/simple.js", bundle);

@@ -73,11 +73,11 @@
 			var args = this.args();
 			
 			if (args){
-				!this.dependents.length && 
+				// !this.dependents.length && 
 					this.log.group(this.id, this.deps.map(function(dep){ return dep.id }));
 				this.value = this.factory.apply(null, args);
 				this.executed = true;
-				!this.dependents.length && 
+				// !this.dependents.length && 
 					this.log.end();
 				this.finish();
 			} else {
