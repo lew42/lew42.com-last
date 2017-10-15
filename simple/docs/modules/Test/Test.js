@@ -1,4 +1,4 @@
-define("Test", ["Base2", "View", "Server"], function(Base2, View){
+define("Test", ["Base2", "View"], function(Base2, View){
 
 	var stylesheet = View({tag: "link"})
 		.attr("rel", "stylesheet")

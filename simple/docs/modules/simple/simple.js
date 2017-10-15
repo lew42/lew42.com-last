@@ -1,8 +1,8 @@
 define("simple",
 
-[ "is", "mixin", "Base2", "View", "Test", "Server"],
+[ "is", "mixin", "Base2", "View", "Test", "server"],
 
-function(is, mixin, Base2, View, Test, Server){
+function(is, mixin, Base2, View, Test, server){
 
 	window.Base = define.Base;
 	window.log = define.log;
@@ -13,9 +13,7 @@ function(is, mixin, Base2, View, Test, Server){
 	window.View = View;
 	window.Test = Test;
 
-	window.server = new Server({
-		log: true
-	});
+	window.server = server
 
 	// server.log("log");
 	// server.log.info("info");
@@ -23,5 +21,6 @@ function(is, mixin, Base2, View, Test, Server){
 	// server.log.warn("warn");
 	// server.log.error("error");
 
+	console.log("so simple");
 	return "so simple";
 });

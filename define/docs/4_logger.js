@@ -73,11 +73,12 @@
 	enabled_logger.off = disabled_logger.off = disabled_logger;
 
 	var logger = define.logger = function(value){
-		if (typeof value === "boolean"){
-			if (value)
-				return enabled_logger;
-			else
-				return enabled_logger.off;
+		if (typeof value === "function" && value.isLogger){
+			return value;
+		} else if (value){
+			return enabled_logger;
+		} else {
+			return disabled_logger;
 		}
 	};
 

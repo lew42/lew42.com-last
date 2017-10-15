@@ -1,6 +1,7 @@
 define("View", ["Base2"], function(Base2){
 
 var View = Base2.extend({
+	tag: "div",
 	instantiate: function(){
 		this.constructs.apply(this, arguments);
 		this.initialize();
@@ -15,7 +16,6 @@ var View = Base2.extend({
 	render: function(){},
 	render_el: function(){
 		if (!this.el){
-			this.tag = this.tag || "div";
 			this.el = document.createElement(this.tag);
 
 			View.captor && View.captor.append(this);

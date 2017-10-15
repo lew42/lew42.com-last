@@ -30,7 +30,7 @@ var build = module.exports = function(livereload){
 
 	bundle += getFile("modules/mixin/events.js");
 
-	["mixin", "Base2", "View", "Test", "Server", "simple"].forEach((file) => bundle += getModule(file));
+	["mixin", "Base2", "View", "Test", "server", "simple"].forEach((file) => bundle += getModule(file));
 	// console.log(bundle);
 
 	save(__dirname + "/../lew42.github.io/simple.js", bundle);
