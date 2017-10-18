@@ -15,12 +15,12 @@ var livereload = module.exports = function(app, path){
 	wss.on("connection", function(ws){
 		console.log("connected");
 
-		chokidar.watch(path).on("change", () => {
+		chokidar.watch(path).on("change", (e) => {
 			if (livereload.block){
 				console.log("blocking a reload");
 			} else {
 				
-				console.log("something changed, sending reload message");
+				console.log(e, "changed, sending reload message");
 				ws.send("reload", (err) => {
 					if (err) console.log("livereload transmit error");
 					else console.log("reload message sent");

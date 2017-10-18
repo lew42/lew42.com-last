@@ -4,8 +4,12 @@ var app = express();
 
 var server = livereload(app, [
 	"./lew42.github.io",
+	"!lew42.github.io/simple.js",
 	"./simple/docs",
-	"./define/docs"]);
+	"!simple/docs/built/simple.js",
+	"./define/docs"
+	, "!**/*.css"
+]);
 
 var root = __dirname + "/lew42.github.io";
 

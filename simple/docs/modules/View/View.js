@@ -111,6 +111,15 @@ var View = Base2.extend({
 		this.el.addEventListener("click", cb.bind(this));
 		return this;
 	},
+	on: function(event, cb){
+		var bound = cb.bind(this);
+		this.el.addEventListener(event, bound);
+		return bound; // so you can remove it
+	},
+	off: function(event, cb){
+		this.el.removeEventListener(event, cb);
+		return this; //?
+	},
 	removeClass: function(className){
 		this.el.classList.remove(className);
 		return this;
@@ -142,6 +151,10 @@ var View = Base2.extend({
 	},
 	hide: function(){
 		this.el.style.display = "none";
+		return this;
+	},
+	remove: function(){
+		this.el.parentNode.removeChild(this.el);
 		return this;
 	}
 });

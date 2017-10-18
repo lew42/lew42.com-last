@@ -1,9 +1,15 @@
 .test-controls { margin-bottom: 1em; }
 
-.test { background: #eee; }
+.test {background: #eee;margin-bottom: 1em;padding-bottom: 1px;}
 .test > .bar { display: flex; background: #ccc; font-size: 1.2em; }
 .test > .bar { flex: 1; padding: 0.25em 0.5em; cursor: pointer; }
-.test > .content { padding: 0.25em 0.5em; }
-.test > .footer { padding: 0.25em 0.5em; }
+.test > .content {background: #fff;}
+
+.test > .footer {/* padding: 0.25em 0.5em; */}
 
 .test.active > .bar { font-weight: bold; }
+
+
+.test.active > .content {
+    margin:  1em;
+}

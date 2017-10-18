@@ -2,7 +2,7 @@ define("Test", ["Base2", "View"], function(Base2, View){
 
 	var stylesheet = View({tag: "link"})
 		.attr("rel", "stylesheet")
-		.attr("href", "/" + define.moduleRoot + "/Test/Test.css");
+		.attr("href", "/simple/modules/Test/Test.css");
 	document.head.appendChild(stylesheet.el);
 
 
@@ -28,15 +28,22 @@ define("Test", ["Base2", "View"], function(Base2, View){
 			this.initialize();
 		},
 		initialize: function(){
-			this.render();
-			this.exec();
+			if (this.shouldRun())
+				this.render();
 		},
 		render: function(){
 			this.view = View().addClass('test').append({
 				bar: View(this.label()).click(this.activate.bind(this)),
-				content: View(),
+				content: View(this.exec.bind(this)),
 				footer: View()
 			});
+
+			this.view.addClass("active");
+
+			if (this.pass > 0)
+				this.view.footer.append("Passed " + this.pass);
+			if (this.fail > 0)
+				this.view.footer.append("Failed " + this.fail);
 
 			if (!this.view.parent)
 				this.view.appendTo(this.container);
@@ -49,24 +56,15 @@ define("Test", ["Base2", "View"], function(Base2, View){
 			return (this.match() ? "#" : "") + this.name;
 		},
 		exec: function(){
-			if (this.shouldRun()){
-				this.view.addClass("active");
-				console.group(this.label());
-				
-				Test.set_captor(this);
+			console.group(this.label());
+			
+			Test.set_captor(this);
 
-				this.view.content.append(function(){
-					this.fn();
-				}.bind(this));
+				// run the test
+				this.fn();
 
-				Test.restore_captor();
-				
-				if (this.pass > 0)
-					this.view.footer.append("Passed " + this.pass);
-				if (this.fail > 0)
-					this.view.footer.append("Failed " + this.fail);
-				console.groupEnd();
-			}
+			Test.restore_captor();
+			console.groupEnd();
 		},
 		assert: function(value){
 			if (value){

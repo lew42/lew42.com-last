@@ -66,6 +66,12 @@
 				document.head.appendChild(this.script);
 			}
 		},
+		path: function(){
+			var a = document.createElement("a");
+			a.href = this.script.src;
+			if (this.requested){
+			}
+		},
 		exec: function(){
 			this.debug.group("ping", this.id);
 
@@ -89,7 +95,7 @@
 			
 			if (args){
 				this.log.group(this.id, this.dependencies.map(function(dep){ return dep.id }));
-				this.value = this.factory.apply(null, args);
+				this.value = this.factory.apply(this, args);
 				this.executed = true;
 				// !this.dependents.length && 
 				this.log.end();
