@@ -62,6 +62,43 @@ View.test = function(View){
 			}
 		});
 	});
+
+	Test("container", function(){
+		var Container = View.extend({
+			render: function(){
+				this.append({
+					// icon: Icon(this.icon)
+					one: this.one,
+					two: this.two
+				});
+			}
+		});
+
+		/*
+			We can do this with .append()...
+			These are nearly the same.  Except you can put them in the Constructor for Container.  Not a major improvement... but yanno, whatever.
+
+			You could also perform logic based on initial parameters:
+
+			icon: this.icon ? Icon(this.icon) : false
+		*/
+		Container({
+			one: "anything",
+			two: function(){
+				this === container.two;
+				View("...");
+			}
+		});
+
+		// vs
+
+		View().append({
+			one: "anything",
+			two: function(){
+				// ...
+			}
+		});
+	});
 };
 
 // var viewTests = View(function(){

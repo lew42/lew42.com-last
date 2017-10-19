@@ -13,6 +13,13 @@ function(is, mixin, Base2, View, Test, server){
 	window.View = View;
 	window.Test = Test;
 
+	["h1", "h2", "h3", "p", "section", "aside", "article", "ul", 
+		"li", "ol", "nav", "span", "a", "em", "strong"].forEach(function(tag){
+		window[tag] = View.extend({
+			tag: tag
+		});
+	});
+
 	window.server = server
 
 	// server.log("log");
