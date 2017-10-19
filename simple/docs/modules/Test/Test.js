@@ -110,5 +110,10 @@ define("Test", ["Base2", "View"], function(Base2, View){
 		}
 	});
 
+	window.addEventListener("hashchange", function(){
+		window.location.reload();
+	});
+	console.warn("auto refresh on window.hashchange event?");
+
 	return Test;
 });

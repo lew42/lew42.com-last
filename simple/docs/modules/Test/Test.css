@@ -2,7 +2,7 @@
 
 .test {background: #eee;margin-bottom: 1em;padding-bottom: 1px;}
 .test > .bar { display: flex; background: #ccc; font-size: 1.2em; }
-.test > .bar { flex: 1; padding: 0.25em 0.5em; cursor: pointer; }
+.test > .bar { flex: 1 1; padding: 0.25em 0.5em; cursor: pointer; }
 .test > .content {background: #fff;}
 
 .test > .footer {/* padding: 0.25em 0.5em; */}
@@ -12,4 +12,25 @@
 
 .test.active > .content {
     margin:  1em;
+}
+
+.test-class-toggles {
+}
+
+.test-class-toggles, .test-class-toggle-group {
+	display: flex;
+	flex-wrap: wrap;
+}
+
+.test-class-toggle-group {
+	border: 1px solid #ccc;
+}
+
+.test-class-toggle {
+	padding: 4px 6px;
+	cursor: pointer;
+}
+
+.test-class-toggle.active {
+	background: #eee;
 }

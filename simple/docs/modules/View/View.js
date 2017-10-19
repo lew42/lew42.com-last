@@ -12,7 +12,9 @@ var View = Base2.extend({
 		// but we don't want to always render_el before assigning pojos, because then we can't change the .tag
 		if (!this.el) this.render_el();
 		this.append(this.render);
+		this.init();
 	},
+	init: function(){},
 	render: function(){},
 	render_el: function(){
 		if (!this.el){
@@ -108,6 +110,22 @@ var View = Base2.extend({
 		}
 		return this;
 	},
+	removeClass: function(className){
+		var arg;
+		for (var i = 0; i < arguments.length; i++){
+			arg = arguments[i];
+			if (is.arr(arg))
+				this.removeClass.apply(this, arg);
+			else if (arg.indexOf(" ") > -1)
+				this.removeClass.apply(this, arg.split(" "));
+			else
+				this.el.classList.remove(arg);
+		}
+		return this;
+	},
+	hasClass: function(className){
+		return this.el.classList.contains(className);
+	},
 	attr: function(name, value){
 		this.el.setAttribute(name, value);
 		return this;
@@ -125,13 +143,6 @@ var View = Base2.extend({
 		this.el.removeEventListener(event, cb);
 		return this; //?
 	},
-	removeClass: function(className){
-		this.el.classList.remove(className);
-		return this;
-	},
-	hasClass: function(className){
-		return this.el.classList.contains(className);
-	},
 	empty: function(){
 		this.el.innerHTML = "";
 		return this;
@@ -144,11 +155,36 @@ var View = Base2.extend({
 		this.el.style.display = "";
 		return this;
 	},
-	style: function(){
+	styles: function(){
 		return getComputedStyle(this.el);
 	},
+	// inline styles
+	style: function(prop, value){
+		// set with object
+		if (is.obj(prop)){
+			for (var p in prop){
+				this.style(p, prop[p]);
+			}
+			return this;
+
+		// set with "prop", "value"
+		} else if (prop && is.def(value)) {
+			this.el.style[prop] = value;
+			return this;
+
+		// get with "prop"
+		} else if (prop) {
+			return this.el.style[prop];
+
+		// get all
+		} else if (!arguments.length){
+			return this.el.style;
+		} else {
+			throw "whaaaat";
+		}
+	},
 	toggle: function(){
-		if (this.style().display === "none")
+		if (this.styles().display === "none")
 			return this.show();
 		else {
 			return this.hide();
