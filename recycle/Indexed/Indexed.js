@@ -83,10 +83,7 @@ var Indexed = Base.extend(evented, {
 			this.save();
 		}
 
-		this.on("new", function(){
-			console.log("on new");
-			this.save();
-		}.bind(this));
+		this.autosave();
 
 		this.log.end();
 	},
@@ -97,10 +94,10 @@ var Indexed = Base.extend(evented, {
 		return this.items;
 	},
 	autosave: function(){
-		// call this to enable autosaving
 		this.on("new", function(){
-			// view it, save it, 
-		}) 
+			console.log("on new");
+			this.save();
+		}.bind(this));
 
 	},
 	render: function(){
