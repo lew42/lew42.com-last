@@ -24,6 +24,8 @@
 		define: function(args){
 			this.assign(args);
 			this.fixLoggers();
+			// this.log = logger(this.log);
+			// this.debug = logger(this.debug); //?
 
 			this.debug.group("define", this.id, this.deps || []);
 

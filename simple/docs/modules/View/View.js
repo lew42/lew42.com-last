@@ -79,7 +79,6 @@ var View = Base2.extend({
 			this.append(value);
 	},
 	append_pojo: function(pojo){
-		var value, view;
 		if (pojo.path){
 			this.append_path(pojo);
 		} else {
@@ -96,6 +95,7 @@ var View = Base2.extend({
 		}
 	},
 	append_prop: function(prop, value){
+		var view;
 		if (value && value.el){
 			view = value;
 		} else if (!value){

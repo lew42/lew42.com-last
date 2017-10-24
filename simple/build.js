@@ -26,6 +26,8 @@ var build = module.exports = function(livereload){
 	var bundle = 
 		getFile("define.js");
 
+	bundle += getModule("docReady");
+
 	[ "is", "Base"].forEach((file) => bundle += getModule(file)); 
 
 	bundle += getFile("modules/mixin/events.js");

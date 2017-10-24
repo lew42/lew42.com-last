@@ -1,6 +1,6 @@
 define("simple",
 
-[ "is", "mixin", "Base2", "View", "Test", "server"],
+[ "is", "mixin", "Base2", "View", "Test", "server", "docReady"],
 
 function(is, mixin, Base2, View, Test, server){
 
