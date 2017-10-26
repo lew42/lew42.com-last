@@ -6,6 +6,9 @@
   "devDependencies": {
     "chokidar": "^1.7.0",
     "glob": "^7.1.2",
+    "gulp": "^3.9.1",
+    "gulp-concat": "^2.6.1",
+    "gulp-ejs": "^3.0.1",
     "ws": "^3.1.0"
   }
 }
