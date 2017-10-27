@@ -1,5 +1,5 @@
 ;(function(define, assign, Module, log){
-	
+	 
 	define.assign({
 		Module: Module,
 		log: log,
