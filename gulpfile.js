@@ -1,5 +1,12 @@
 var gulp = require("gulp");
-var concat = require("gulp-concat");
-var ejs = require("gulp-ejs");
+gulp.concat = require("gulp-concat");
+gulp.ejs = require("gulp-ejs");
+gulp.util = require("gulp-util");
 
-gulp.task("default", ["build"])
+gulp.task("default", function(){
+	return gulp.src("./lew42.github.io/lew42.ejs")
+		.pipe(gulp.ejs({
+			msg: "hello world"
+		}, {}, { ext: ".js" }).on("error", gulp.util.log))
+		.pipe(gulp.dest("./lew42.github.io"))
+});
