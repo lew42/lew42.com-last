@@ -11,7 +11,7 @@
 	Base.assign({
 		extend: function(){
 			var Ext = function(){
-				this.instantiate.apply(this, arguments);
+				return this.instantiate.apply(this, arguments);
 			};
 			Ext.assign = this.assign;
 			Ext.assign(this);
