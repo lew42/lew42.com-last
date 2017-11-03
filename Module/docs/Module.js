@@ -46,13 +46,36 @@ Base.extend = function(){
 	return Ext;
 };
 
-var Module = Base.extend({
-	instantiate: function(id){
-		if (typeof id === "object")
-			id = id.id
+Module.get = function(token){
+	var id = typeof token === "object" ?
+		token : this.resolve(token);
+};
 
+/*
+Turn a string into an identification object with {
+	host: "lew42.com",
+	path: "one/two",
+	name: "thing",
+	ext: "js"
+}
+
+"thing" --> {
+	host: window.location.host,
+	path: Module.modulesPath + "/thing",
+	name: "thing",
+	ext: "js"
+}
+
+*/
+Module.resolve = function(token){
+	var id = {};
+
+}
+
+var Module = Base.extend({
+	instantiate: function(token){
 		// check the cache
-		var cached = Module.get(id);
+		var cached = Module.get(token);
 
 		// if found, use the cached module
 		if (cached){
@@ -63,11 +86,18 @@ var Module = Base.extend({
 			this.initialize.apply(this, arguments);
 		}
 	},
+	// this can be called multiple times (every time Module() is called for a given id)
 	initialize: function(){
 		// parse arguments into args object
 		var args = Module.args(arguments);
 
+		if (!this.ready){
+			this.ready = P(); // needed before we even define
+		}
+
 		// if module is undefined
+			// all new modules, 
+			// and cached modules that haven't been defined
 		if (!this.factory){
 
 			// and we have an incoming factory fn
@@ -103,15 +133,59 @@ var Module = Base.extend({
 			this._deps = Promise.all(this.deps.map((dep)=>this.require(dep)));
 		}
 
-		this.executed = Promise.all(this.deps.map((dep) => this.require(dep)))
+		this.ready = Promise.all(this.deps.map((dep) => this.import(dep)))
 			.then((args) => this.exec.apply(this, args));
 	},
-	register: function(token){
+	resolve2: function(token){
+		// token can be
+			// a name ("thing")
+			// a url ("//lew42.com/modules/thing")
+			// a relative path ("./thing")
+			// an absolute path ("/thing")
+		// id.host, id.path, id.name, id.ext
+		
+	},
+	get2: function(token){
+		var id = (typeof token === "object") ? 
+			token : this.resolve(token);
+
+		var module = this.modules[id.name];
+
+		if (!module)
+			module = this.parent && this.parent.get(id);
+
+		if (!module)
+			module = new this.constructor(id);
+	},
+	import2: function(token){
+		// resolve, check cache, 
+		return this.get(token).ready;
+	},
+	import: function(token){
+		id = Module.token(token);
+		var module = this.get(id);
+		if (!module){
+			module = new this.constructor({
+				id: id,
+				parent: this
+			})
+		}
+		return module.ready;
+	},
+	resolve: function(token){
+		var id = {
+			host: this.host,
+		};
 		if (token[0] === "/"){
 			if (token[1] === "/"){
 				// remote "//lew42/thing" ?
+				id.host;
+				id.path;
+				id.name;
 			} else {
 				// abs "/thing"
+				id.host = this.host;
+
 			}
 		} else if (token.indexOf("./") === 0){
 			// "./thing"
