@@ -46,9 +46,59 @@ Base.extend = function(){
 	return Ext;
 };
 
+/*
+token can be "token" or {id}
+
+Should global lookup be... <- host <- path <- name
+Full url?
+
+Module("thing") --> Module.get("thing") --> 
+Module.resolve("thing") --> "//origin.com/modules/thing/thing.js"
+
+No matter what the module is defined as, or included as, we need to make sure they match up...
+
+Module.get("thing") and Module("thing", fn)
+
+Do we ever Module("//remote") or Module("./rel") ?
+
+I suppose this is ok, and just uses Module.get
+They're not relative to a specific module...
+
+Module.get("./rel") could be relative to the current url.
+
+Module.get("/abs") should be relative to the current host.
+
+Module.get("//remote") is fine too.
+
+Module.get("module") is fine too...
+
+
+When we request a file from a different url... the url (host/path) is different.  When we then define the requested module:
+
+Module(["./thing"]) 
+  request --> "thing.js"
+
+thing.js:
+Module("thing")
+
+How is this identified?
+1. currentScript? 
+*/
 Module.get = function(token){
-	var id = typeof token === "object" ?
-		token : this.resolve(token);
+	var id;
+	if (typeof token === "string" && this.modules[token]){
+		// 1. exact token match
+		return this.modules[token];
+	} else {
+		id = this.resolve(token);
+
+		if (this.modules)
+	}
+	
+};
+
+Module.get2 = function(token){
+	return this.modules[this.resolve(token)];
 };
 
 /*
@@ -68,9 +118,59 @@ Turn a string into an identification object with {
 
 */
 Module.resolve = function(token){
+	if (typeof token === "object"){
+		return token;
+	} else {
+		// ...
+	}
+	var id = typeof token === "object" ?
+		token : this.resolve(token);
 	var id = {};
 
-}
+};
+
+Module.url = function(token){
+	var a = document.createElement("a");
+	a.href = token;
+	return {
+		token: token,
+		url: a.href,
+		host: a.host,
+		hostname: a.hostname,
+		pathname: a.pathname
+	};
+};
+
+Module.resolve3 = function(token){
+	var url;
+
+	// mimic ending?
+		var parts = token.split("/");
+
+		// "path/thing/" --> "path/thing/thing.js"
+		if (token[token.length-1] === "/"){
+			token = token + parts[parts.length-2] + ".js";
+		// last part doesn't contain a "."
+		// "path/thing" --> "path/thing/thing.js"
+		} else if (parts[parts.length-1].indexOf(".") < 0){
+			token = token + "/" + parts[parts.length-1] + ".js";
+		}
+
+		// others, such as
+		// "path/file.js"
+		// "path/styles.css"
+		// will remain
+
+
+
+	var url;
+	if (token[0] !== "." && token[0] !== "/"){
+		// "local"
+		url = this.url(this.modulesPath + "/" + token);
+	} else {
+		a.href = 
+	}
+};
 
 var Module = Base.extend({
 	instantiate: function(token){
@@ -112,8 +212,37 @@ var Module = Base.extend({
 			}
 		}
 	},
-	get: function(id){
-		return this.modules[id] || (this.parent && this.parent.get(id));
+	resolve2: function(token){
+		if (typeof token === "object"){
+			return token;
+		} else {
+			// ...
+		}
+		// token can be
+			// a name ("thing")
+			// a url ("//lew42.com/modules/thing")
+			// a relative path ("./thing")
+			// an absolute path ("/thing")
+		// id.host, id.path, id.name, id.ext
+		
+	},
+	get: function(token){
+		var id;
+
+		if (typeof token === "string" && this.modules[token]){
+			// 1. exact token match
+			return this.modules[token];
+		} else {
+			id = this.resolve(token);
+
+			if (this.modules[id.name]){
+				// 2. resolved name
+				return this.modules[id.name];
+			} else {
+				// 3. global lookup, resolved via this.resolved 
+				return this.constructor.get(id);
+			}
+		}
 	},
 	define: function(){
 		// clear the request, if queued
@@ -135,15 +264,6 @@ var Module = Base.extend({
 
 		this.ready = Promise.all(this.deps.map((dep) => this.import(dep)))
 			.then((args) => this.exec.apply(this, args));
-	},
-	resolve2: function(token){
-		// token can be
-			// a name ("thing")
-			// a url ("//lew42.com/modules/thing")
-			// a relative path ("./thing")
-			// an absolute path ("/thing")
-		// id.host, id.path, id.name, id.ext
-		
 	},
 	get2: function(token){
 		var id = (typeof token === "object") ? 
