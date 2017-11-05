@@ -46,292 +46,102 @@ Base.extend = function(){
 	return Ext;
 };
 
-/*
-token can be "token" or {id}
-
-Should global lookup be... <- host <- path <- name
-Full url?
-
-Module("thing") --> Module.get("thing") --> 
-Module.resolve("thing") --> "//origin.com/modules/thing/thing.js"
-
-No matter what the module is defined as, or included as, we need to make sure they match up...
-
-Module.get("thing") and Module("thing", fn)
-
-Do we ever Module("//remote") or Module("./rel") ?
-
-I suppose this is ok, and just uses Module.get
-They're not relative to a specific module...
-
-Module.get("./rel") could be relative to the current url.
-
-Module.get("/abs") should be relative to the current host.
-
-Module.get("//remote") is fine too.
-
-Module.get("module") is fine too...
-
-
-When we request a file from a different url... the url (host/path) is different.  When we then define the requested module:
-
-Module(["./thing"]) 
-  request --> "thing.js"
-
-thing.js:
-Module("thing")
-
-How is this identified?
-1. currentScript? 
-*/
-Module.get = function(token){
-	var id;
-	if (typeof token === "string" && this.modules[token]){
-		// 1. exact token match
-		return this.modules[token];
-	} else {
-		id = this.resolve(token);
-
-		if (this.modules)
-	}
-	
-};
-
-Module.get2 = function(token){
-	return this.modules[this.resolve(token)];
-};
-
-/*
-Turn a string into an identification object with {
-	host: "lew42.com",
-	path: "one/two",
-	name: "thing",
-	ext: "js"
-}
-
-"thing" --> {
-	host: window.location.host,
-	path: Module.modulesPath + "/thing",
-	name: "thing",
-	ext: "js"
-}
-
-*/
-Module.resolve = function(token){
-	if (typeof token === "object"){
-		return token;
-	} else {
-		// ...
-	}
-	var id = typeof token === "object" ?
-		token : this.resolve(token);
-	var id = {};
-
-};
-
-Module.url = function(token){
-	var a = document.createElement("a");
-	a.href = token;
-	return {
-		token: token,
-		url: a.href,
-		host: a.host,
-		hostname: a.hostname,
-		pathname: a.pathname
-	};
-};
-
-Module.resolve3 = function(token){
-	var url;
-
-	// mimic ending?
-		var parts = token.split("/");
-
-		// "path/thing/" --> "path/thing/thing.js"
-		if (token[token.length-1] === "/"){
-			token = token + parts[parts.length-2] + ".js";
-		// last part doesn't contain a "."
-		// "path/thing" --> "path/thing/thing.js"
-		} else if (parts[parts.length-1].indexOf(".") < 0){
-			token = token + "/" + parts[parts.length-1] + ".js";
-		}
-
-		// others, such as
-		// "path/file.js"
-		// "path/styles.css"
-		// will remain
-
-
-
-	var url;
-	if (token[0] !== "." && token[0] !== "/"){
-		// "local"
-		url = this.url(this.modulesPath + "/" + token);
-	} else {
-		a.href = 
-	}
-};
-
 var Module = Base.extend({
 	instantiate: function(token){
-		// check the cache
-		var cached = Module.get(token);
+		var id = typeof token === "string" ?
+			Module.resolve(token) : false;
 
-		// if found, use the cached module
+		var cached = id && Module.get(id);
+
 		if (cached){
-			cached.initialize.apply(cached, arguments);
+			cached.args.apply(cached, arguments);
+			cached.reinitialize();
 			return cached;
 
 		} else {
-			this.initialize.apply(this, arguments);
+			this.args.apply(this, arguments);
+			this.initialize();
+			return this;
 		}
 	},
-	// this can be called multiple times (every time Module() is called for a given id)
 	initialize: function(){
-		// parse arguments into args object
-		var args = Module.args(arguments);
+		this.ready = P();
+		this.exports = {}; // module.exports is from node-land, an empty object
 
-		if (!this.ready){
-			this.ready = P(); // needed before we even define
-		}
+		// cache me
+		Module.set(this.id, this);
 
-		// if module is undefined
-			// all new modules, 
-			// and cached modules that haven't been defined
-		if (!this.factory){
+		// handle incoming arguments
+		this.reinitialize();
+	},
+	reinitialize: function(){
+		// have we defined?
+		if (!this.defined){
+			// no, either define() or queue the request
 
-			// and we have an incoming factory fn
-			if (args.factory){
-				this.assign(args);
+			// factory function available
+			if (this.factory){
 				this.define();
 
-			// if it hasn't been queued
+			// no factory function to define with
 			} else if (!this.queued) {
-				// q up `this.request`
-				this.queued = setTimeout(0, this.request.bind(this));
+				// queue up the request
+				this.queued = setTimeout(this.request.bind(this), 0);
 			}
-		}
-	},
-	resolve2: function(token){
-		if (typeof token === "object"){
-			return token;
-		} else {
-			// ...
-		}
-		// token can be
-			// a name ("thing")
-			// a url ("//lew42.com/modules/thing")
-			// a relative path ("./thing")
-			// an absolute path ("/thing")
-		// id.host, id.path, id.name, id.ext
-		
-	},
-	get: function(token){
-		var id;
 
-		if (typeof token === "string" && this.modules[token]){
-			// 1. exact token match
-			return this.modules[token];
+		// we already defined
 		} else {
-			id = this.resolve(token);
-
-			if (this.modules[id.name]){
-				// 2. resolved name
-				return this.modules[id.name];
-			} else {
-				// 3. global lookup, resolved via this.resolved 
-				return this.constructor.get(id);
-			}
+			// if the previous .factory was overridden, this is trouble
+			if (this.factory !== this.defined)
+				throw "do not redefine a module with a new .factory fn";
 		}
+
 	},
 	define: function(){
 		// clear the request, if queued
 		if (this.queued)
 			clearTimeout(this.queued);
 
-		// this.executed ? needs a better name...
-		// this.defined isn't a good name either, even though the boolean works
-		// because you need 2 sides:
-		// if (this.defined) or if (this.executed)
-		// and this.defined.then() and this.executed.then()
-		// both need to make sense?
-
-		// both can't make sense - because promises are created before they're finished...
-
 		if (this.deps){
-			this._deps = Promise.all(this.deps.map((dep)=>this.require(dep)));
+			this.ready.resolve(
+				Promise.all( this.deps.map((dep) => this.import(dep)) )
+					   .then((args) => this.exec.apply(this, args))
+			);
+		} else {
+			this.ready.resolve(this.exec());
 		}
 
-		this.ready = Promise.all(this.deps.map((dep) => this.import(dep)))
-			.then((args) => this.exec.apply(this, args));
-	},
-	get2: function(token){
-		var id = (typeof token === "object") ? 
-			token : this.resolve(token);
-
-		var module = this.modules[id.name];
-
-		if (!module)
-			module = this.parent && this.parent.get(id);
-
-		if (!module)
-			module = new this.constructor(id);
-	},
-	import2: function(token){
-		// resolve, check cache, 
-		return this.get(token).ready;
+		this.defined = this.factory;
 	},
 	import: function(token){
-		id = Module.token(token);
-		var module = this.get(id);
-		if (!module){
-			module = new this.constructor({
-				id: id,
-				parent: this
-			})
-		}
+		var module = new this.constructor(token);
+			// checks cache, returns existing or new
+			// if new, queues request
+			// when <script> arrives, and Module() is defined, it gets the cached module
+			// and defines all deps, waits for all deps, then executes its factory, then resolves this .ready promise
 		return module.ready;
 	},
-	resolve: function(token){
-		var id = {
-			host: this.host,
-		};
-		if (token[0] === "/"){
-			if (token[1] === "/"){
-				// remote "//lew42/thing" ?
-				id.host;
-				id.path;
-				id.name;
-			} else {
-				// abs "/thing"
-				id.host = this.host;
-
-			}
-		} else if (token.indexOf("./") === 0){
-			// "./thing"
-		} else {
-			// "local"
-
-		}
-	},
-	$require: function(id){
-		var module = this.get(id);
-
-		if (!module)
-			throw "module not found";
-
-		return module.value;
-	},
 	exec: function(){
-		return this.value = this.factory.call(this, this.$require.bind(this));
-		// this.executed = true;
+		var params = Module.params(this.factory);
+		var ret;
+
+		if (params[0] === "require"){
+			ret = this.factory.call(this, this.require.bind(this), this.exports, this);
+			if (typeof ret === "undefined")
+				this.value = this.exports;
+			else 
+				this.value = ret;
+		} else {
+			this.value = this.factory.apply(this, arguments);
+		}
+		return this.value;
 	},
-	constructs: function(){
+	args: function(){
 		var arg;
 		for (var i = 0; i < arguments.length; i++){
 			arg = arguments[i];
 			if (typeof arg === "string")
-				this.id = arg;
+				this.token = arg;
 			else if (toString.call(arg) === '[object Array]')
 				this.deps = arg;
 			else if (typeof arg === "function")
@@ -343,52 +153,19 @@ var Module = Base.extend({
 			else
 				console.error("whoops");
 		}
+
+		if (this.token)
+			this.id = Module.resolve(this.token);
 	},
-	require: function(id){
-		var module = this.get(id);
-
-		if (!module){
-			module = new this.constructor(id);
-
-			// if (this.host)
-				// module.host = this.host;
-		}
-
-		// this.dependencies.push(module);
-
-		// module.dependents.push(this);
-
-		return module.executed;
+	require: function(token){
+		var module = new this.constructor(token);
+		return module.value;
 	},
-	resolve: function(id){
-		var parts = id.split("/"); // id could be //something.com/something/?
-
-		// change this to default mimic
-		// require "thing" --> thing/thing.js
-		// require "thing.js" --> thing.js
-		// require "thing/" --> thing/index?
-		
-		// "thing/"
-		if (id[id.length-1] === "/"){
-			// ends in "/", mimic last part --> "thing/thing.js"
-			id = id + parts[parts.length-2] + ".js";
-
-		// does not contain ".js", "thing"
-		} else if (parts[parts.length-1].indexOf(".js") < 0){
-			id = id + "/" + parts[parts.length-1] + ".js";
-		}
-
-		// convert non-absolute paths to moduleRoot paths
-		if (id[0] !== "/"){
-			id = "/" + define.modulesPath + "/" + id;
-		}
-
-		return id;
-	},
-	request: function(){
+	requestScript: function(){
+		this.queued = false;
 		if (!this.defined && !this.requested){
 			this.script = document.createElement("script");
-			this.src = this.resolve(this.id);
+			this.src = this.id;
 			this.script.src = this.src;
 
 			// used in global define() function as document.currentScript.module
@@ -399,52 +176,82 @@ var Module = Base.extend({
 			// this.debug("request", this.id);
 			document.head.appendChild(this.script);
 			this.requested = true;
+		} else {
+			throw "trying to re-request?"
 		}
+	},
+	request: function(){
+		this.queued = false;
+		if (!this.defined && !this.requested){
+			this.xhr = new XMLHttpRequest();
+			this.xhr.addEventListener("load", this.functionize.bind(this));
+			this.xhr.open("GET", this.id);
+			this.xhr.send();
+			this.requested = true;
+		} else {
+			throw "trying to re-request?";
+		}
+	},
+	requireRegExp: function(){
+		return /require\s*\(['"]([^'"]+)['"]\);?/gm;
+	},
+	functionize: function(data){
+		var re = this.requireRegExp();
+		this.deps = [];
+		this.deps.push(re.exec(this.xhr.responseText)[1]);
+		console.log("functionize", this.xhr.responseText);
 	}
 });
 
 Module.modules = {};
 
 Module.get = function(id){
-	return this.modules[id] || false;
+	return this.modules[id];
 };
 
-Module.init = function(){
-	if (!this.q){
-		this.q = P();
-	}
+Module.set = function(id, module){
+	this.modules[id] = module;
 };
 
-Module.q = function(cb){
-	if (!this.timeout){
-		this.timeout = P();
-		setTimeout(0, function(){
-			this.timeout.resolve();
-		}.bind(this));
-	}
 
-	return this.timeout.then(cb);
-};
+// Module.url = function(token){
+// 	var a = document.createElement("a");
+// 	a.href = token;
+// 	return {
+// 		token: token,
+// 		url: a.href,
+// 		host: a.host,
+// 		hostname: a.hostname,
+// 		pathname: a.pathname
+// 	};
+// };
 
-Module.args = function(){
-	var arg, args = {};
-	for (var i = 0; i < arguments.length; i++){
-		arg = arguments[i];
-		if (typeof arg === "string")
-			args.id = arg;
-		else if (toString.call(arg) === '[object Array]')
-			args.deps = arg;
-		else if (typeof arg === "function")
-			args.factory = arg;
-		else if (typeof arg === "object")
-			Module.assign.call(args, arg);
-		else if (typeof arg === "undefined")
-			continue;
-		else
-			console.error("whoops");
+Module.resolve = function(token){
+	// mimic ending?
+	var parts = token.split("/");
+
+	// "path/thing/" --> "path/thing/thing.js"
+	if (token[token.length-1] === "/"){
+		token = token + parts[parts.length-2] + ".js";
+	// last part doesn't contain a "."
+	// "path/thing" --> "path/thing/thing.js"
+	} else if (parts[parts.length-1].indexOf(".") < 0){
+		token = token + "/" + parts[parts.length-1] + ".js";
 	}
 
-	return args;
+	if (token[0] !== "/")
+		token = "/modules/" + token;
+
+	return token; 
 };
 
-Module.prototype.root = new Module();
+var STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;
+var ARGUMENT_NAMES = /([^\s,]+)/g;
+
+Module.params = function(fn){
+	var fnStr = fn.toString().replace(STRIP_COMMENTS, '');
+	var result = fnStr.slice(fnStr.indexOf('(')+1, fnStr.indexOf(')')).match(ARGUMENT_NAMES);
+	if (result === null)
+		result = [];
+	return result;
+};
