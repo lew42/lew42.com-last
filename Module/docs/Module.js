@@ -350,10 +350,15 @@ var Module = Base.extend({
 		return module.ready;
 	},
 	exec: function(){
-		var params = Module.params(this.factory);
+		try {
+			// throwing a fit when .factory is a Proxy...
+			var params = Module.params(this.factory);
+		} catch (e){
+			params = false;
+		}
 		var ret;
 
-		if (params[0] === "require"){
+		if (params && params[0] === "require"){
 			ret = this.factory.call(this, this.require.bind(this), this.exports, this);
 			if (typeof ret === "undefined")
 				this.value = this.exports;
@@ -431,7 +436,7 @@ var Module = Base.extend({
 	}
 });
 
-Module.prototype = getProxy(Module.prototype);
+// Module.prototype = getProxy(Module.prototype);
 
 Module.modules = {};
 
@@ -479,7 +484,7 @@ var STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;
 var ARGUMENT_NAMES = /([^\s,]+)/g;
 
 Module.params = function(fn){
-	var fnStr = fn.toString().replace(STRIP_COMMENTS, '');
+	var fnStr = Function.prototype.toString.call(fn).replace(STRIP_COMMENTS, '');
 	var result = fnStr.slice(fnStr.indexOf('(')+1, fnStr.indexOf(')')).match(ARGUMENT_NAMES);
 	if (result === null)
 		result = [];
