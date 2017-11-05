@@ -1,3 +1,89 @@
+
+	var console_methods = ["log", "group", "debug", "trace", 
+		"error", "warn", "info", "time", "timeEnd", "dir"];
+
+	var g = function(str, fn){
+		this.group(str);
+		fn();
+		this.end();
+	};
+
+	var gc = function(str, fn){
+		this.groupc(str);
+		fn();
+		this.end();
+	};
+
+	var make_enabled_logger = function(){
+		var enabled_logger = console.log.bind(console);
+		enabled_logger.enabled = true;
+		enabled_logger.disabled = false;
+
+		console_methods.forEach(function(name){
+			enabled_logger[name] = console[name].bind(console);
+		});
+
+		enabled_logger.groupc = console.groupCollapsed.bind(console);
+		enabled_logger.end = console.groupEnd.bind(console);
+		enabled_logger.close = function(closure, ctx){
+			if (typeof closure === "function"){
+				closure.call(ctx);
+			}
+			this.end();
+		};
+
+		enabled_logger.g = g;
+		enabled_logger.gc = gc;
+
+		enabled_logger.isLogger = true;
+		
+		return enabled_logger;
+	};
+
+
+	var noop = function(){};
+
+	var make_disabled_logger = function(){
+		var disabled_logger = function(){};
+		disabled_logger.disabled = true;
+		disabled_logger.enabled = false;
+		console_methods.forEach(function(name){
+			disabled_logger[name] = noop;
+		});
+		disabled_logger.groupc = noop;
+		disabled_logger.end = noop;
+		disabled_logger.close = function(closure, ctx){
+			if (typeof closure === "function"){
+				closure.call(ctx);
+			}
+		};
+		disabled_logger.g = g;
+		disabled_logger.gc = gc;
+
+		disabled_logger.isLogger = true;
+		
+		return disabled_logger;
+	};
+
+	var enabled_logger = make_enabled_logger();
+	var disabled_logger = make_disabled_logger();
+
+	enabled_logger.on = disabled_logger.on = enabled_logger;
+	enabled_logger.off = disabled_logger.off = disabled_logger;
+
+	var logger = function(value){
+		if (typeof value === "function" && value.isLogger){
+			return value;
+		} else if (value){
+			return enabled_logger;
+		} else {
+			return disabled_logger;
+		}
+	};
+
+	window.log = logger(true);
+	window.debug = logger(false);
+
 var P = function(){
 	var $resolve, $reject;
 	var p = new Promise(function(resolve, reject){
@@ -11,6 +97,75 @@ var P = function(){
 	return p;
 };
 
+var set = function(){
+	var arg;
+	for (var i = 0; i < arguments.length; i++){
+		arg = arguments[i];
+
+		// pojo arg
+		if (arg && arg.constructor === Object){
+
+			// iterate over arg props
+			for (var j in arg){
+
+				// set_*
+				if (this["set_" + j]){
+					this["set_" + j](arg[j]);
+					// create a .set_assign() method that simply calls assign with the arg...
+
+				// "assign" prop will just call assign
+				} else if (j === "assign") {
+					this.assign(arg[j]);
+
+				} else if (this[j] && this[j].set){
+					this[j].set(arg[j]);
+
+				// existing prop is a pojo - "extend" it
+				} else if (this[j] && this[j].constructor === Object){
+
+					// make sure its safe
+					if (this.hasOwnProperty(j))
+						set.call(this[j], arg[j]);
+
+					// if not, protect the prototype
+					else {
+						this[j] = set.call(Object.create(this[j]), arg[j]);
+					}
+
+				// everything else, assign
+				} else {
+					// basically just arrays and fns...
+					// console.warn("what are you", arg[j]);
+					this[j] = arg[j];
+				}
+			}
+
+		// non-pojo arg
+		} else if (this.set_value){
+			// auto apply if arg is array?
+			this.set_value(arg);
+
+		// oops
+		} else {
+			console.warn("not sure what to do with", arg);
+		}
+	}
+
+	return this; // important
+};
+
+
+var createConstructor = function(o){
+	var name = (o && o.name) || this.name + "Ext";
+	o && delete o.name;
+	eval("var " + name + ";");
+	var constructor = eval("(" + name + " = function(){\r\n\
+		if (!(this instanceof " + name + "))\r\n\
+			return new (" + name + ".bind.apply(" + name + ", [null].concat([].slice.call(arguments)) ));\r\n\
+		return this.instantiate.apply(this, arguments);\r\n\
+	});");
+	return constructor;
+};
 
 var Base = function(){
 	if (!(this instanceof Base))
@@ -30,38 +185,111 @@ Base.assign = Base.prototype.assign = function(){
 };
 
 Base.prototype.instantiate = function(){};
+Base.prototype.set = set;
+Base.prototype.log = logger(true);
+Base.prototype.set_log = function(value){
+	this.log = logger(value);
+};
 
-Base.extend = function(){
-	var Ext = function(){
-		if (!(this instanceof Ext))
-			return new (Ext.bind.apply(Ext, [null].concat([].slice.call(arguments))));
-		return this.instantiate.apply(this, arguments);
-	};
+Base.createConstructor = createConstructor;
+Base.extend = function(o){
+	var Ext = this.createConstructor(o);
 	Ext.assign = this.assign;
 	Ext.assign(this);
 	Ext.prototype = Object.create(this.prototype);
 	Ext.prototype.constructor = Ext;
-	Ext.prototype.assign.apply(Ext.prototype, arguments);
+	Ext.prototype.set.apply(Ext.prototype, arguments);
 
 	return Ext;
 };
 
+
+var getProxy = function(obj){
+
+	var proxy = new Proxy(obj, {
+		get: function(ctx, prop, prox){
+			var value = ctx[prop];
+
+			if (["constructor"].indexOf(prop) === -1)
+				console.log("get", prop);
+
+			if ((typeof value === "function") && ["constructor", "log", "hasOwnProperty"].indexOf(prop) === -1){
+				return new Proxy(value, {
+					apply: function(fn, ctx, args){
+						var largs = ["."+prop+"("].concat(args, ")");
+						// var log = ctx.log;
+						console.group.apply(console, largs);
+						var value = fn.apply(ctx, args);
+						console.groupEnd();
+						return value;
+					}
+				});
+			} else {
+				return value;
+			}
+		},
+		set: function(ctx, prop, value, prox){
+			if (ctx === ctx.constructor.prototype)
+				debugger;
+			console.log("set", prop, value);
+			ctx[prop] = value;
+			if (ctx["update_" + prop])
+				ctx["update_" + prop]();
+			else if (ctx.update)
+				ctx.update();
+
+			return true;
+		}
+	});	
+
+	return proxy;
+};
+
+var Debug = Base.extend({
+	name: "Debug",
+	log: true,
+	instantiate: function(){
+		this.set.apply(this, arguments);
+		this.initialize();
+		if (this.log.enabled){
+			return getProxy(this);
+		} else {
+			return this;
+		}
+	},
+	initialize: function(){}
+});
+
+Debug.prototype = getProxy(Debug.prototype);
+
 var Module = Base.extend({
 	instantiate: function(token){
+		console.log(arguments);
 		var id = typeof token === "string" ?
 			Module.resolve(token) : false;
 
 		var cached = id && Module.get(id);
 
+		var module;
+
 		if (cached){
-			cached.args.apply(cached, arguments);
+			cached.set.apply(cached, arguments);
 			cached.reinitialize();
 			return cached;
 
 		} else {
-			this.args.apply(this, arguments);
-			this.initialize();
-			return this;
+			if (token && token.log)
+				this.set_log(token.log);
+
+			if (this.log.enabled){
+				module = getProxy(this);
+			} else {
+				module = this;
+			}
+
+			module.set.apply(module, arguments);
+			module.initialize();
+			return module;
 		}
 	},
 	initialize: function(){
@@ -136,32 +364,32 @@ var Module = Base.extend({
 		}
 		return this.value;
 	},
-	args: function(){
-		var arg;
-		for (var i = 0; i < arguments.length; i++){
-			arg = arguments[i];
-			if (typeof arg === "string")
-				this.token = arg;
-			else if (toString.call(arg) === '[object Array]')
-				this.deps = arg;
-			else if (typeof arg === "function")
-				this.factory = arg;
-			else if (typeof arg === "object")
-				this.assign(arg);
-			else if (typeof arg === "undefined")
-				continue;
-			else
-				console.error("whoops");
-		}
+	set_token: function(token){
+		this.token = token;
+		this.id = Module.resolve(this.token);
+	},
+	set_value: function(arg){
+		if (typeof arg === "string")
+			this.set_token(arg);
+		else if (toString.call(arg) === '[object Array]')
+			this.deps = arg;
+		else if (typeof arg === "function")
+			this.factory = arg;
+		else if (typeof arg === "object")
+			this.assign(arg);
+		// else if (typeof arg === "undefined"){
+		// 	// ok?
+		// }
+		else
+			console.error("whoops");
 
-		if (this.token)
-			this.id = Module.resolve(this.token);
+		return this;
 	},
 	require: function(token){
 		var module = new this.constructor(token);
 		return module.value;
 	},
-	requestScript: function(){
+	request: function(){
 		this.queued = false;
 		if (!this.defined && !this.requested){
 			this.script = document.createElement("script");
@@ -180,7 +408,7 @@ var Module = Base.extend({
 			throw "trying to re-request?"
 		}
 	},
-	request: function(){
+	request2: function(){
 		this.queued = false;
 		if (!this.defined && !this.requested){
 			this.xhr = new XMLHttpRequest();
@@ -202,6 +430,8 @@ var Module = Base.extend({
 		console.log("functionize", this.xhr.responseText);
 	}
 });
+
+Module.prototype = getProxy(Module.prototype);
 
 Module.modules = {};
 
