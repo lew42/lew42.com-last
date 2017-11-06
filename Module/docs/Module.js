@@ -210,8 +210,8 @@ var getProxy = function(obj){
 		get: function(ctx, prop, prox){
 			var value = ctx[prop];
 
-			if (["constructor"].indexOf(prop) === -1)
-				console.log("get", prop);
+			// if (["constructor"].indexOf(prop) === -1)
+				// console.log("get", prop);
 
 			if ((typeof value === "function") && ["constructor", "log", "hasOwnProperty"].indexOf(prop) === -1){
 				return new Proxy(value, {
@@ -222,6 +222,17 @@ var getProxy = function(obj){
 						var value = fn.apply(ctx, args);
 						console.groupEnd();
 						return value;
+					},
+					get: function(ctx, prop, prox){
+						if (prop === "toString"){
+							return new Proxy(ctx[prop], {
+								apply: function(fn, prox, args){
+									return fn.call(ctx);
+								}
+							});
+						} else {
+							return ctx[prop];
+						}
 					}
 				});
 			} else {
@@ -231,7 +242,7 @@ var getProxy = function(obj){
 		set: function(ctx, prop, value, prox){
 			if (ctx === ctx.constructor.prototype)
 				debugger;
-			console.log("set", prop, value);
+			// console.log("set", prop, value);
 			ctx[prop] = value;
 			if (ctx["update_" + prop])
 				ctx["update_" + prop]();
@@ -320,8 +331,8 @@ var Module = Base.extend({
 		// we already defined
 		} else {
 			// if the previous .factory was overridden, this is trouble
-			if (this.factory !== this.defined)
-				throw "do not redefine a module with a new .factory fn";
+			// if (this.factory !== this.defined)
+			// 	throw "do not redefine a module with a new .factory fn";
 		}
 
 	},
@@ -339,7 +350,7 @@ var Module = Base.extend({
 			this.ready.resolve(this.exec());
 		}
 
-		this.defined = this.factory;
+		this.defined = true;
 	},
 	import: function(token){
 		var module = new this.constructor(token);
@@ -350,12 +361,12 @@ var Module = Base.extend({
 		return module.ready;
 	},
 	exec: function(){
-		try {
+		// try {
 			// throwing a fit when .factory is a Proxy...
 			var params = Module.params(this.factory);
-		} catch (e){
-			params = false;
-		}
+		// } catch (e){
+		// 	params = false;
+		// }
 		var ret;
 
 		if (params && params[0] === "require"){
@@ -484,7 +495,7 @@ var STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;
 var ARGUMENT_NAMES = /([^\s,]+)/g;
 
 Module.params = function(fn){
-	var fnStr = Function.prototype.toString.call(fn).replace(STRIP_COMMENTS, '');
+	var fnStr = fn.toString().replace(STRIP_COMMENTS, '');
 	var result = fnStr.slice(fnStr.indexOf('(')+1, fnStr.indexOf(')')).match(ARGUMENT_NAMES);
 	if (result === null)
 		result = [];
