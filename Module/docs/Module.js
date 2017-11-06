@@ -1,3 +1,4 @@
+;(function(){
 
 	var console_methods = ["log", "group", "debug", "trace", 
 		"error", "warn", "info", "time", "timeEnd", "dir"];
@@ -167,7 +168,7 @@ var createConstructor = function(o){
 	return constructor;
 };
 
-var Base = function(){
+var Base = window.Base = function(){
 	if (!(this instanceof Base))
 		return new (Base.bind.apply(Base, [null].concat([].slice.call(arguments))));
 	return this.instantiate.apply(this, arguments);
@@ -203,85 +204,16 @@ Base.extend = function(o){
 	return Ext;
 };
 
-
-var getProxy = function(obj){
-
-	var proxy = new Proxy(obj, {
-		get: function(ctx, prop, prox){
-			var value = ctx[prop];
-
-			// if (["constructor"].indexOf(prop) === -1)
-				// console.log("get", prop);
-
-			if ((typeof value === "function") && ["constructor", "log", "hasOwnProperty"].indexOf(prop) === -1){
-				return new Proxy(value, {
-					apply: function(fn, ctx, args){
-						var largs = ["."+prop+"("].concat(args, ")");
-						// var log = ctx.log;
-						console.group.apply(console, largs);
-						var value = fn.apply(ctx, args);
-						console.groupEnd();
-						return value;
-					},
-					get: function(ctx, prop, prox){
-						if (prop === "toString"){
-							return new Proxy(ctx[prop], {
-								apply: function(fn, prox, args){
-									return fn.call(ctx);
-								}
-							});
-						} else {
-							return ctx[prop];
-						}
-					}
-				});
-			} else {
-				return value;
-			}
-		},
-		set: function(ctx, prop, value, prox){
-			if (ctx === ctx.constructor.prototype)
-				debugger;
-			// console.log("set", prop, value);
-			ctx[prop] = value;
-			if (ctx["update_" + prop])
-				ctx["update_" + prop]();
-			else if (ctx.update)
-				ctx.update();
-
-			return true;
-		}
-	});	
-
-	return proxy;
-};
-
-var Debug = Base.extend({
-	name: "Debug",
-	log: true,
-	instantiate: function(){
-		this.set.apply(this, arguments);
-		this.initialize();
-		if (this.log.enabled){
-			return getProxy(this);
-		} else {
-			return this;
-		}
+var Module = window.Module = Base.extend({
+	debug: logger(false),
+	set_debug: function(value){
+		this.debug = logger(value);
 	},
-	initialize: function(){}
-});
-
-Debug.prototype = getProxy(Debug.prototype);
-
-var Module = Base.extend({
 	instantiate: function(token){
-		console.log(arguments);
 		var id = typeof token === "string" ?
 			Module.resolve(token) : false;
 
 		var cached = id && Module.get(id);
-
-		var module;
 
 		if (cached){
 			cached.set.apply(cached, arguments);
@@ -289,23 +221,17 @@ var Module = Base.extend({
 			return cached;
 
 		} else {
-			if (token && token.log)
-				this.set_log(token.log);
-
-			if (this.log.enabled){
-				module = getProxy(this);
-			} else {
-				module = this;
-			}
-
-			module.set.apply(module, arguments);
-			module.initialize();
-			return module;
+			this.set.apply(this, arguments);
+			this.initialize();
+			return this;
 		}
 	},
 	initialize: function(){
 		this.ready = P();
 		this.exports = {}; // module.exports is from node-land, an empty object
+
+		if (!this.id)
+			this.id = document.currentScript.src;
 
 		// cache me
 		Module.set(this.id, this);
@@ -326,13 +252,14 @@ var Module = Base.extend({
 			} else if (!this.queued) {
 				// queue up the request
 				this.queued = setTimeout(this.request.bind(this), 0);
+				this.debug("Queued Module('"+this.id+"')");
 			}
 
 		// we already defined
 		} else {
 			// if the previous .factory was overridden, this is trouble
-			// if (this.factory !== this.defined)
-			// 	throw "do not redefine a module with a new .factory fn";
+			if (this.factory !== this.defined)
+				throw "do not redefine a module with a new .factory fn";
 		}
 
 	},
@@ -342,15 +269,18 @@ var Module = Base.extend({
 			clearTimeout(this.queued);
 
 		if (this.deps){
+			this.debug("Defined Module('"+this.id+"', [" + this.deps.join(", ")+ "])");
 			this.ready.resolve(
 				Promise.all( this.deps.map((dep) => this.import(dep)) )
 					   .then((args) => this.exec.apply(this, args))
 			);
 		} else {
+			this.debug("Defined Module('"+this.id+"')");
 			this.ready.resolve(this.exec());
 		}
 
-		this.defined = true;
+		this.defined = this.factory;
+
 	},
 	import: function(token){
 		var module = new this.constructor(token);
@@ -361,15 +291,12 @@ var Module = Base.extend({
 		return module.ready;
 	},
 	exec: function(){
-		// try {
-			// throwing a fit when .factory is a Proxy...
-			var params = Module.params(this.factory);
-		// } catch (e){
-		// 	params = false;
-		// }
+		var params = Module.params(this.factory);
 		var ret;
 
-		if (params && params[0] === "require"){
+		this.log.groupc(this.id);
+		
+		if (params[0] === "require"){
 			ret = this.factory.call(this, this.require.bind(this), this.exports, this);
 			if (typeof ret === "undefined")
 				this.value = this.exports;
@@ -378,6 +305,9 @@ var Module = Base.extend({
 		} else {
 			this.value = this.factory.apply(this, arguments);
 		}
+
+		this.log.end();
+
 		return this.value;
 	},
 	set_token: function(token){
@@ -393,9 +323,10 @@ var Module = Base.extend({
 			this.factory = arg;
 		else if (typeof arg === "object")
 			this.assign(arg);
-		// else if (typeof arg === "undefined"){
-		// 	// ok?
-		// }
+		else if (typeof arg === "undefined"){
+			// I think I had an acceptable use case for this, can't remember when it happens
+			console.warn("set(undefined)?");
+		}
 		else
 			console.error("whoops");
 
@@ -446,8 +377,6 @@ var Module = Base.extend({
 		console.log("functionize", this.xhr.responseText);
 	}
 });
-
-// Module.prototype = getProxy(Module.prototype);
 
 Module.modules = {};
 
@@ -501,3 +430,6 @@ Module.params = function(fn){
 		result = [];
 	return result;
 };
+
+
+})();
