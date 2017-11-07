@@ -72,7 +72,7 @@
 	enabled_logger.on = disabled_logger.on = enabled_logger;
 	enabled_logger.off = disabled_logger.off = disabled_logger;
 
-	var logger = function(value){
+	var logger = window.logger = function(value){
 		if (typeof value === "function" && value.isLogger){
 			return value;
 		} else if (value){
@@ -187,7 +187,7 @@ Base.assign = Base.prototype.assign = function(){
 
 Base.prototype.instantiate = function(){};
 Base.prototype.set = set;
-Base.prototype.log = logger(true);
+Base.prototype.log = logger(false);
 Base.prototype.set_log = function(value){
 	this.log = logger(value);
 };
@@ -227,11 +227,17 @@ var Module = window.Module = Base.extend({
 		}
 	},
 	initialize: function(){
+		var a;
+
 		this.ready = P();
 		this.exports = {}; // module.exports is from node-land, an empty object
 
-		if (!this.id)
-			this.id = document.currentScript.src;
+		if (!this.id){
+			a = document.createElement("a");
+			a.href = document.currentScript.src;
+			this.id = a.pathname;
+			this.set_log(true);
+		}
 
 		// cache me
 		Module.set(this.id, this);

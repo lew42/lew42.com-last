@@ -1,9 +1,10 @@
-define("Base", ["is", "server"], function(is, server){
+Module("Base", ["is", "server"], function(require){
+	var is = require("is");
+	var server = require("server");
+
 	// for convenience
 	window.is = is;
-	window.log = define.log;
-	window.logger = define.logger;
 	window.server = server;
 
-	return define.Base;
+	return Base;
 });

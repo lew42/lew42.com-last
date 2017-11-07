@@ -13,12 +13,20 @@ var http = require("http");
 var chokidar = require("chokidar");
 var WebSocket = require("ws");
 
+var reloadWatchGlobs = [
+	"./lew42.github.io",
+	"./simple/docs",
+	"./Module/docs",
+	"!**/*.css"
+];
+
 var server = function(){
 
 	var app = express();
 	app.use(express.static(__dirname + "/lew42.github.io"));
 
 	app.use("/Module/", express.static(__dirname + "/Module/docs"));
+	app.use("/simple/", express.static(__dirname + "/simple/docs"));
 
 	var server = http.createServer(app);
 	var wss = new WebSocket.Server({
@@ -29,7 +37,7 @@ var server = function(){
 	wss.on("connection", function(ws){
 		console.log("connected");
 
-		chokidar.watch(path).on("change", (e) => {
+		chokidar.watch(reloadWatchGlobs).on("change", (e) => {
 			console.log(e, "changed, sending reload message");
 			ws.send("reload", (err) => {
 				if (err) console.log("livereload transmit error");
@@ -53,8 +61,7 @@ var server = function(){
 // });
 
 var moduleGlobs = [
-	__dirname + "/Module/docs/one.js",
-	__dirname + "/Module/docs/two.js"
+	__dirname + "/Module/docs/Module.js"
 ];
 
 var simpleModule = function(name){

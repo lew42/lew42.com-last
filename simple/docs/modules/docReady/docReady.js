@@ -1,9 +1,8 @@
 console.timeEnd("docReady");
 console.time("document.ready");
-define("docReady", function(){
-	
+Module("docReady", function(){
 	var ready = function(){
-		define("document.ready", function(){
+		Module("document.ready", function(){
 			console.timeEnd("document.ready");
 			return true;
 		});

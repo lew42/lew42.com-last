@@ -1,4 +1,4 @@
-define("mixin/events.js", function(){
+Module("mixin/events.js", function(){
 
 return {
 	on: function(event, cb){

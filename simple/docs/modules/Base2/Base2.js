@@ -1,22 +1,22 @@
-define("Base2", ["Base"], 
+Module("Base2", ["Base"], 
 
 // {log: true},
 
-function(Base){
-
+function(require){
+	var Base = require("Base");
 	var Base2 = Base.extend({
-		log: define.logger(false),
+		log: logger(false),
 		assign: Base.assign,
 		instantiate: function(){}
 	}).assign({
 		config: function(instance, options){
 			if (options && is.def(options.log)){
 				// pass { log: true/false/another } into constructor as first option
-				instance.log = define.logger(options.log);
+				instance.log = logger(options.log);
 				delete options.log;
 			} else {
 				// you could assign true/false to the prototype
-				instance.log = define.logger(instance.log); 
+				instance.log = logger(instance.log); 
 			}
 		}
 	});

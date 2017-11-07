@@ -1,5 +1,5 @@
-define("View", ["Base2"], function(Base2){
-
+Module("View", ["Base2"], function(require){
+var Base2 = require("Base2");
 var View = Base2.extend({
 	tag: "div",
 	instantiate: function(){

@@ -1,11 +1,15 @@
-define("simple",
+Module("simple",
 
 [ "is", "mixin", "Base2", "View", "Test", "server", "docReady"],
 
-function(is, mixin, Base2, View, Test, server){
+function(require){
 
-	window.Base = define.Base;
-	window.log = define.log;
+	var is = require("is");
+	var mixin = require("mixin");
+	var Base2 = require("Base2");
+	var View = require("View");
+	var Test = require("Test");
+	var server = require("server");
 
 	window.is = is;
 	window.mixin = mixin;

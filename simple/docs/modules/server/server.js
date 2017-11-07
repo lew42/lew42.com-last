@@ -1,5 +1,5 @@
-define("server", function(){
-	var log = define.logger(true);
+Module("server", function(){
+	var log = logger(true);
 
 	var server = new WebSocket("ws://" + window.location.host);
 

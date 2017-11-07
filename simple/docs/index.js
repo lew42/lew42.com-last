@@ -1,3 +1,3 @@
-define(["simple"], function(){
+Module(["simple"], function(){
 	
 });

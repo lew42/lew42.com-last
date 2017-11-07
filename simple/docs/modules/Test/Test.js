@@ -1,5 +1,8 @@
-define("Test", ["Base2", "View"], function(Base2, View){
+Module("Test", ["Base2", "View"], function(require){
 
+	var Base2 = require("Base2");
+	var View = require("View");
+	
 	var stylesheet = View({tag: "link"})
 		.attr("rel", "stylesheet")
 		.attr("href", "/simple/modules/Test/Test.css");

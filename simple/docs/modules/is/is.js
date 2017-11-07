@@ -1,4 +1,4 @@
-define("is", function(){
+Module("is", function(){
 
 	var is = {
 		arr: function(value){
