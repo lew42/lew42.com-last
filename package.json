@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "express": "^4.15.4",
+    "express": "^4.16.2",
     "express-history-api-fallback": "^2.2.1"
   },
   "devDependencies": {
@@ -9,6 +9,8 @@
     "gulp": "^3.9.1",
     "gulp-concat": "^2.6.1",
     "gulp-ejs": "^3.0.1",
-    "ws": "^3.1.0"
+    "gulp-plumber": "^1.1.0",
+    "gulp-watch": "^4.3.11",
+    "ws": "^3.3.0"
   }
 }

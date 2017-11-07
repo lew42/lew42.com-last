@@ -17,11 +17,6 @@ var root = __dirname + "/lew42.github.io";
 // so we must build define.js first, then simple.js
 // (because simple.js imports the compiled define.js)
 var define = require("./define/server.js")(app, livereload);
-
-chokidar.watch(__dirname + "/Module/docs")
-app.use("/Module/", express.static(__dirname + "/Module/docs"));
-
-
 var simple = require("./simple/server.js")(app, livereload);
 
 app.use(express.static(root));
