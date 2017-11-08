@@ -87,20 +87,18 @@ gulp.task("watch", function(){
 	gulp.watch(simpleGlobs, ['build-simple'])
 });
 
-gulp.task("build", ["build-module", "build-simple"]);
-
 gulp.task("build-module", function(){
 	return gulp.src(moduleGlobs)
 		.pipe(concat("Module.js"))
 		.pipe(gulp.dest(__dirname + "/lew42.github.io/"));
 });
 
-gulp.task("build-simple", function(){
+gulp.task("build-simple", ["build-module"], function(){
 	return gulp.src(simpleGlobs)
 		.pipe(concat("simple.js"))
 		.pipe(gulp.dest(__dirname + "/lew42.github.io/"));
 });
 
-gulp.task("default", ["build", "watch"], function(){
+gulp.task("default", ["build-simple", "watch"], function(){
 	server();
 });

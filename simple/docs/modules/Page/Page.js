@@ -1,4 +1,4 @@
-define("Page/", ["Route/"], function(){
+Module("Page/", ["Route/"], function(){
 
 var Page = Route.extend();
 
