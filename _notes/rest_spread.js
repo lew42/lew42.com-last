@@ -42,6 +42,16 @@ where
 [1, 2, 3] !== [1, 2, 3]
 
 
+It's also kinda like str objects...
+
+str // obj
+str.value // "str"
+
+str + str
+vs
+str.value + str.value
+
+
 */
 
 /*
