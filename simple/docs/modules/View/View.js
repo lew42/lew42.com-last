@@ -255,6 +255,10 @@ var View = Base2.extend({
 			return this.hide();
 		}
 	},
+	index: function(){
+		var index = 0, prev;
+		// while (prev = this.el.previousElementSibling)
+	},
 	hide: function(){
 		this.el.style.display = "none";
 		return this;
