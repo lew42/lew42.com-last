@@ -14,7 +14,18 @@ return {
 				cbs[i].apply(this, [].slice.call(arguments, 1));
 			}
 		} else {
-			console.warn("no events registered for", event);
+			// console.warn("no events registered for", event);
+		}
+		return this;
+	},
+	off: function(event, cbForRemoval){
+		var cbs = this.events && this.events[event];
+		if (cbs && cbs.length){
+			for (var i = 0; i < cbs.length; i++){
+				if (cbs[i] === cbForRemoval){
+					cbs.splice(i, 1);
+				}
+			}
 		}
 		return this;
 	}
