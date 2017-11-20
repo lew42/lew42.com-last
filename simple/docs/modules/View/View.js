@@ -64,7 +64,7 @@ var View = Base2.extend({
 			} else if (is.fn(arg)){
 				this.append_fn(arg);
 			} else {
-				// DOM, str, etc
+				// DOM, str, undefined, null, etc
 				this.el.append(arg);
 			}
 		}
@@ -98,19 +98,6 @@ var View = Base2.extend({
 		var view;
 		if (value && value.el){
 			view = value;
-		} else if (!value){
-			// false, undefined, or otherwise falsy
-			// why?  why not append value.toString() ?
-			/*
-			if you: render(){ 
-				this.append({
-					icon: this.icon
-				});
-			}, and then you set Thing({ icon: false }),
-			you don't really want to append "false",
-			you want to append nothing...
-			*/
-			return this;
 		} else {
 			view = View().append(value);
 		}
@@ -264,8 +251,20 @@ var View = Base2.extend({
 		return this;
 	},
 	remove: function(){
-		this.el.parentNode.removeChild(this.el);
+		this.el.parentNode && this.el.parentNode.removeChild(this.el);
 		return this;
+	},
+	editable(off){
+		if (off === false){
+			this.el.removeAttribute("contenteditable");
+		} else {
+			this.attr("contenteditable", true)
+		}
+		return this;
+	},
+	value(){
+		// get&set?
+		return this.el.innerHTML;
 	}
 });
 
