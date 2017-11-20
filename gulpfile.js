@@ -17,7 +17,8 @@ var reloadWatchGlobs = [
 	"./lew42.github.io",
 	"./simple/docs",
 	"./Module/docs",
-	"!**/*.css"
+	"!**/*.css",
+	"!.git", "!**/.git"
 ];
 
 var server = function(){
