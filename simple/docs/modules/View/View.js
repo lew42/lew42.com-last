@@ -264,7 +264,7 @@ var View = Base2.extend({
 		return this;
 	},
 	remove: function(){
-		this.el.parentNode.removeChild(this.el);
+		this.el.parentNode && this.el.parentNode.removeChild(this.el);
 		return this;
 	}
 });
