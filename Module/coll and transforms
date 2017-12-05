@@ -1,0 +1,172 @@
+coll.each(item => {
+	item.value // the actual value
+	item.set() // swap .value, leaving the rest in-tact
+		// might need to use .set_ or .set_value to setup cbs, behaviors, etc
+	item.name // for props w/ a handle
+	item.index // for ordered things, 0 based
+	item.rank, score, or anything // arbitrary values
+	item.view = item.value.render();
+
+});
+
+persistent coll vs temporary:
+- are changes streamed to file?
+
+coll.add("value") --> can be handled in various ways
+
+view.add() vs view.append()
+str.add() vs str.append()
+
+
+Syncing arbitrarily ordered children:
+
+When it comes time to update(), and you may or may not have removed any of the children, or injected new ones in-between - you're faced with 2 easy options:
+* rerender only the new children (not reusing old dom)
+* try to perform only the precise actions necessary
+
+Option 2 above requires a 1:1 requirement of array members to dom children.
+If an element gets tossed in, out of place, it could throw the whole thing off.
+	I suppose, you could do some rudimentary checking, and rerender if things get wonky.
+
+But, yea - I was trying to come up with a better way to reuse the views.
+
+The thing is, any object might have a dozen views.  And, when re-rendering, we'd need a way to "release" and "reuse" views - or... re-match them.
+
+If you have a collection object that manages the changes to the list (add/remove), then this would be the place to track the list's views.
+
+In fact, each member of the collection/set could have its own scope, which is like a quick and easy way to store arbitrary things related to *that* specific instance.
+
+So, while a collection contains references to other items, and items might appear in a dozen contexts...
+* some things, like hover effects to identify all instances of a single item, should happen across all instances
+* some things, like menus, should only appear on the instance in question.
+
+
+This is Redux?
+We should be able to track all actions/state across all items - and not just at the fs level, but at the js level.
+
+It's basically... relative logic.
+
+So, you have an arbitrary collection of items.  And that collection is rendered on screen, so you see the list.  Each item renders itself, though.  And those views, which get appended, should be tracked by the collection's view, not the item.
+
+The item shouldn't care if/how many times its viewed.
+
+When we compare the collection to the collectionView's nodes, we should be able to resolve what needs to happen...
+
+If the collection creates a unique item object for each item, even if it is already an object, then we have a secondary object to store stuff.  This could be the "scope".
+
+So, when rendering the collView, coll.each((v, i, s) => {
+	// value, index, scope
+	scope.index;
+	scope.value;
+	scope.view = scope.value.render();
+});
+
+Now we have a firm handle from the coll to the previous views
+
+Should we "diff in place"?
+* loop again, if an item isn't supposed to be there, remove it
+* doesn't matter if it was moved elsewhere...
+
+Re-render vs Patch?
+Re-render all children:
+- doesn't even need to remove/replace - can diff in place
+- but, starts from the beginning, loops over all items, and removes/keeps/adds as necessary
+
+Patch:
+- as items are added/removed by the user (at human speed), we don't need to re-render the entire thing (batch?).
+- if you move an item, just remove/add that single item - as the user commands
+
+
+
+
+
+Can I bring in the View, in order to render these Modules?
+
+I think that makes sense...
+
+That's where the "coll" comes in.
+* consistent api from array to obj
+* ordering and naming are independent/optional
+
+coll.add({ name: value, name: value }) ?
+	coll.append?
+
+coll.append could automatically treat them as ordered.
+
+Would an ordered coll work differently?
+If the coll follows certain rules, it can be replaced by an array?
+
+coll.push, pop, map, etc?
+
+coll.set?
+
+coll.assign?
+
+if coll has so many methods, you'd need to quarantine actual props...
+
+coll.get("prop") rather than coll.prop....
+
+
+
+
+I really need a collection for deps.
+
+1. ["dep", "tokens"]
+2. [module, instances]
+
+From these, we get the views, which show when they're ready.
+
+The basic module view should be:
+
+[0. required]
+1. defined - we now know deps
+	// this is how 0. happens...
+2. all deps ready
+3. exec, which can be async
+4. resolved/ready
+[5. if required, continue with dependents]
+
+So, module.deps could be a collection object.
+
+module.deps.add("token");
+module.deps.ready.then(...)
+
+Or, just do it with arrays...
+Can't really "listen" to them as well, though.
+And, can't really sync a list view to an array as easily.  You'd need coll.add/remove api.
+
+
+
+
+
+
+Temporary blocking of `thenables`
+
+await new Thing();
+	// calls .then() on the thing, which is good
+
+const thing = await new Thing();
+	calls .then() on the thing, which is good
+	.then() => .ready.then()
+	.ready.resolve(thing);
+		// here's the problem
+		// the ready promise resolution gets delayed by thing.then
+
+What I was thinking, is a way to turn off .then, or switch .then to a new function.
+
+And, when .then is called, it immediately/synchronously? calls the cb, resolving the promise?
+
+Well, again, if you return `thing` that time, you'll still have the same problem?
+
+You need to set thing.then so that it resolves immediately, and then switches back to thing.ready
+
+So, thing.ready.resolve(thing)
+	set thing.then to resolve immediately with any arbitrary value?
+	so, when we resolve with thing... no - that value matters...
+
+Maybe the only way to get it to work, is to turn .then off until next round?
+You essentially remove .then, resolve with `thing`, and then turn .then back on, on next tick.
+
+While I think this would work, it's a little iffy.
+
+You'd basically break the `thenable` until next tick... which could be unpredictable.

@@ -1,0 +1,10 @@
+exec(){
+	await deps;
+}
+
+vs
+
+define(){
+	await deps;
+	exec();
+}
