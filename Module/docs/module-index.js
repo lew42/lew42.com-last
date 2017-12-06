@@ -1,5 +1,4 @@
-console.log("yea?");
 // Module(["thing"], function(require){
-Module(function(require){
+Module((one) => {
 	console.log("this is index.js");
 });

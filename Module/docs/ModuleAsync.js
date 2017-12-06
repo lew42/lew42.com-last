@@ -99,6 +99,9 @@ var P = window.P = function(){
 };
 
 var set = function(...args){
+	if (this._set)
+		this._set(...args); // pre .set() hook
+
 	for (const arg of args){
 		// pojo arg
 		if (arg && arg.constructor === Object){
@@ -139,15 +142,18 @@ var set = function(...args){
 			}
 
 		// non-pojo arg
-		} else if (this.set_){
+		} else if (this.set$){
 			// auto apply if arg is array?
-			this.set_(arg);
+			this.set$(arg);
 
 		// oops
 		} else {
 			console.warn("not sure what to do with", arg);
 		}
 	}
+
+	if (this.set_)
+		this.set_(...args); // post .set() hook
 
 	return this; // important
 };
@@ -500,39 +506,40 @@ View.assign({
 	}
 });
 
+const is = {
+	str(value){
+		return typeof value === "string";
+	}
+};
+
 const debug = false;
 var Module = window.Module = Base.extend({
 	name: "Module",
 	base: "modules",
 	debug: logger(debug),
 	log: logger(false || debug),
-	set_debug: function(value){
+	set_debug(value){
 		this.debug = logger(value);
 		this.log = logger(value);
-	},
-	instantiate: function(token){
-		const id = typeof token === "string" ?
-			this.resolve(token) : false;
+	}
 
-		const cached = id && Module.get(id);
+	instantiate(...args){
+		// return this.initialize().set(...args);
+		return (this.get(args[0]) || this.initialize()).set(...args);
+	}
 
-		if (cached){
-			cached.set.apply(cached, arguments);
-			return cached;  // important
+	get(token){
+		return is.str(token) && Module.get(this.resolve(token));
+	}
 
-		} else {
-			this.initialize();
-			this.set.apply(this, arguments);
-			return this;
-		}
-	},
-	resolve: function(token){
-		// mimic ending?
-		var parts = token.split("/");
+	resolve(token){
+		const parts = token.split("/");
 
+		// token ends with "/", example:
 		// "path/thing/" --> "path/thing/thing.js"
 		if (token[token.length-1] === "/"){
 			token = token + parts[parts.length-2] + ".js";
+
 		// last part doesn't contain a "."
 		// "path/thing" --> "path/thing/thing.js"
 		} else if (parts[parts.length-1].indexOf(".") < 0){
@@ -542,23 +549,17 @@ var Module = window.Module = Base.extend({
 		if (token[0] !== "/")
 			token = "/" + Module.base + "/" + token;
 
-		return token; 
-	},
+		return token; // the transformed token is now the id
+	}
+		// move these to set_id and exec (or whereever they're needed...)
 	initialize: function(){
-		var a;
-
 		this.ready = P();
-		this.exports = {}; // module.exports is from node-land, an empty object
+		this.dependencies = [];
+		this.dependents = [];
 
-		if (!this.id){
-			a = document.createElement("a");
-			a.href = document.currentScript.src;
-			this.id = a.pathname;
-			this.set_log(true);
-		}
+		
 
-		// cache me
-		Module.set(this.id, this);
+		return this; // see instantiate()
 	},
 	reinitialize: function(){
 		// have we defined?
@@ -585,18 +586,19 @@ var Module = window.Module = Base.extend({
 
 	},
 	import: function(token){
-		var module = new this.constructor(token);
-			// checks cache, returns existing or new
-			// if new, queues request
-			// when <script> arrives, and Module() is defined, it gets the cached module
-			// and defines all deps, waits for all deps, then executes its factory, then resolves this .ready promise
-		return module.ready;
-	},
+		return (new this.constructor(token)).register(this);
+	}
+
+	register(dependent){
+		this.dependents.push(dependent);
+		return this.ready;
+	}
+
 	exec: function(){
-		console.log("exec?");
 		var params = Module.params(this.factory);
 		var ret;
 
+		this.exports = {};
 		this.log.group(this.id);
 		
 		if (params[0] === "require"){
@@ -613,20 +615,27 @@ var Module = window.Module = Base.extend({
 
 		return this.value;
 	},
-	set_token: function(token){
+
+	set_id(id){
+		this.id = id;
+
+		// cache me
+		Module.set(this.id, this);
+	}
+
+	set_token(token){
 		this.token = token;
-		this.id = this.resolve(this.token);
-	},
+		this.set_id(this.resolve(this.token));
+	}
 	
 	set_deps(deps){
 		if (this.is_defined)
 			throw "provide deps before factory fn";
 
 		this.deps = deps;
-	},
+	}
 
 	set_factory(factory){
-		console.log("set_factory");
 		this.factory = factory;
 
 		if (this.queued)
@@ -642,7 +651,7 @@ var Module = window.Module = Base.extend({
 		);
 	},
 
-	set_(arg){
+	set$(arg){
 		if (typeof arg === "string")
 			this.set_token(arg);
 		else if (toString.call(arg) === '[object Array]')
@@ -713,8 +722,10 @@ Module.base = "modules";
 
 Module.modules = {};
 
+// returns module or falsey
 Module.get = function(id){
-	return this.modules[id];
+	return id && this.modules[id];
+		// id can be false, or undefined?
 };
 
 Module.set = function(id, module){
@@ -734,14 +745,15 @@ Module.set = function(id, module){
 // 	};
 // };
 
-var STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;
-var ARGUMENT_NAMES = /([^\s,]+)/g;
+const STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;
+const ARGUMENT_NAMES = /([^\s,]+)/g;
 
 Module.params = function(fn){
-	var fnStr = fn.toString().replace(STRIP_COMMENTS, '');
+	const fnStr = fn.toString().replace(STRIP_COMMENTS, '');
 	var result = fnStr.slice(fnStr.indexOf('(')+1, fnStr.indexOf(')')).match(ARGUMENT_NAMES);
 	if (result === null)
 		result = [];
+	// console.log(result);
 	return result;
 };
 
