@@ -518,18 +518,21 @@ var Module = window.Module = Base.extend({
 	base: "modules",
 	debug: logger(debug),
 	log: logger(false || debug),
-	set_debug(value){
-		this.debug = logger(value);
-		this.log = logger(value);
-	}
 
 	instantiate(...args){
-		// return this.initialize().set(...args);
 		return (this.get(args[0]) || this.initialize()).set(...args);
 	}
 
 	get(token){
 		return is.str(token) && Module.get(this.resolve(token));
+	}
+
+	initialize(){
+		this.ready = P();
+		this.dependencies = [];
+		this.dependents = [];
+
+		return this; // see instantiate()
 	}
 
 	resolve(token){
@@ -551,16 +554,7 @@ var Module = window.Module = Base.extend({
 
 		return token; // the transformed token is now the id
 	}
-		// move these to set_id and exec (or whereever they're needed...)
-	initialize: function(){
-		this.ready = P();
-		this.dependencies = [];
-		this.dependents = [];
 
-		
-
-		return this; // see instantiate()
-	},
 	reinitialize: function(){
 		// have we defined?
 		if (!this.defined){
@@ -586,6 +580,8 @@ var Module = window.Module = Base.extend({
 
 	},
 	import: function(token){
+		// should resolve with this before constructor
+		// but resolve isn't relative right now anyway (todo)
 		return (new this.constructor(token)).register(this);
 	}
 
@@ -594,7 +590,7 @@ var Module = window.Module = Base.extend({
 		return this.ready;
 	}
 
-	exec: function(){
+	exec(){
 		var params = Module.params(this.factory);
 		var ret;
 
@@ -668,15 +664,38 @@ var Module = window.Module = Base.extend({
 			console.error("whoops");
 
 		return this;
-	},
-	require: function(token){
+	}
+
+	set_(){
+		this.id_from_src();
+	}
+
+	id_from_src(){
+		if (!this.id){
+			const a = document.createElement("a");
+			a.href = document.currentScript.src;
+
+			this.set({
+				id: a.pathname,
+				log: true // might need to be adjusted
+			})
+		}
+	}
+
+	set_debug(value){
+		this.debug = logger(value);
+		this.log = logger(value);
+	}
+
+	require(token){
 		// this makes little sense here...
 		// if there's no cached module, don't create one
 		// this.get(token) => resolve and return
 		var module = new this.constructor(token);
 		return module.value;
-	},
-	request: function(){
+	}
+
+	request(){
 		this.queued = false;
 		if (!this.defined && !this.requested){
 			this.script = document.createElement("script");
