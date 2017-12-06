@@ -1,4 +1,4 @@
-define("View/View.test.js", ["View", "Test"], function(View, Test){
+Module("View/View.test.js", ["View", "Test"], function(View, Test){
 
 View.test = function(View){
 	var assert = Test.assert;
@@ -85,7 +85,7 @@ View.test = function(View){
 		Container({
 			one: "anything",
 			two: function(){
-				this === container.two;
+				// this === container.two;
 				View("...");
 			}
 		});

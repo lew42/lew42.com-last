@@ -1,0 +1,54 @@
+OO await
+
+obj.method()
+// continues without delay
+vs 
+await obj.method()
+// sets up an invisible callback, waiting for resolution
+
+
+async constructor(){} // does not work
+
+this.method(await this.other());
+vs
+this.other()
+	await something;
+
+In other words, where do you "await"?
+
+It depends on how you want your program to run.
+If you want it to continue, and come back, you shouldn't await.
+If you want it to wait, so you can do something with the value, then you should await.
+
+Now, the trick is, to define the asynchrony in isolated bits.  No extra sync stuff...
+
+this.sync(await this.async());
+
+BUT!
+
+If you want to make life a little easier, just mark both sync() and async() as `async functions`, so you can await *inside* this.sync():
+
+this.sync(promise){
+	await promise;
+	// now do your sync stuff..
+}
+
+This is a really handy pattern, especially with custom thenables.
+
+If the "thenable" is "ready", then it'll behave mostly synchronously (I think there's a flush & nextTick).
+
+If the "thenable" is not ready, then it waits for it automatically.
+
+It's hardly different than:
+
+this.sync(thing){
+	if (thing.ready){
+		// code here...
+	} else {
+		thing.on("ready", function(){
+			// same code here...
+		});
+	}
+}
+
+Just a lot easier to read/write, avoids unnecessary callbacks, indentation, curly braces, etc.
