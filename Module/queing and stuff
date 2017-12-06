@@ -1,0 +1,42 @@
+queing and stuff
+
+module.set_id() --> auto queues request?
+
+The more efficient way, would be to:
+1. queue a double-check, to see if it has been defined, but only after the initial .set()?
+
+If we're caching, and then .setting() from the constructor, it's impossible that we're importing, without  
+
+instantiate -> set().q() ?
+q(){
+	if !factory, queue request
+}
+
+
+2 situations:
+
+1. when we set_id, and then set_factory, and don't want to queue the request immediately
+2. when we import, creating/caching the module by id alone, and need to queue the request.  BUT, clear that queued request, if that module is later defined...
+
+so, in 1, we can queue the request after .set() (in instantiate)
+but, 2, we won't know...
+
+I think automatically setting it is ok, for now..
+
+import(token) --> cached/new
+	if cached, has it been queued?
+	if new, auto q?
+
+doing an initialize after .set() might make sense...
+why create complex hooks?
+	just an opportunity to be misunderstood
+
+
+scripts:
+Module("id-only") ? no? maybe?
+Module("id", fn) --> set_id() then set_factory()
+
+Module("this", ["another"], fn)
+	// wait before queuing
+	
+import -> id-only

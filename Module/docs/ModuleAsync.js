@@ -211,8 +211,8 @@ Base.extend_args = function(first){
 
 Base.createConstructor = createConstructor;
 Base.extend = function(...args){
-	var params = this.extend_args(...args);
-	var Ext = this.createConstructor(params.name || this.name + "Ext");
+	const params = this.extend_args(...args);
+	const Ext = this.createConstructor(params.name || this.name + "Ext");
 	Ext.assign = this.assign;
 	Ext.assign(this);
 	Ext.prototype = Object.create(this.prototype);
@@ -224,15 +224,11 @@ Base.extend = function(...args){
 
 const View = Base.extend({
 	tag: "div",
-	instantiate: function(){
-		this.constructs.apply(this, arguments);
+	instantiate(...args){
+		this.set(...args);
 		this.initialize();
 	},
 	initialize: function(){
-		// if we pass constructs that are non-pojos, they get appended
-		// in order to append, we have to render_el earlier
-		// but we don't want to always render_el before assigning pojos, because then we can't change the .tag
-		if (!this.el) this.render_el();
 		this.append(this.render);
 		this.init();
 	},
@@ -253,25 +249,32 @@ const View = Base.extend({
 			this.classes && this.addClass(this.classes);
 		}
 	},
-	constructs: function(){
-		var arg;
-		for (var i = 0; i < arguments.length; i++){
-			arg = arguments[i];
-			if (is.pojo(arg)){
-				this.assign(arg);
-			} else {
-				if (!this.el) this.render_el();
-				this.append(arg);
-			}
+	set$(arg){
+		if (is.pojo(arg)){
+			this.assign(arg);
+		} else {
+			this.append(arg);
 		}
 	},
-	set: function(){
-		this.empty();
-		this.append.apply(this, arguments);
+	set(...args){
+		var hasBeenEmptied = false;
+		for (const arg of args){
+			// empty once if .set() will .append()
+			if (!is.pojo(arg) && !hasBeenEmptied){
+				this.empty();
+				hasBeenEmptied = true;
+			}
+
+			// the default .set() that we've overridden
+			Base.prototype.set.call(this, arg);
+		}
 		return this;
 	},
 	append: function(){
 		var arg;
+
+		if (!this.el) this.render_el();
+
 		for (var i = 0; i < arguments.length; i++){
 			arg = arguments[i];
 			if (arg && arg.el){
@@ -513,6 +516,7 @@ const is = {
 };
 
 const debug = false;
+
 var Module = window.Module = Base.extend({
 	name: "Module",
 	base: "modules",
@@ -521,19 +525,20 @@ var Module = window.Module = Base.extend({
 
 	instantiate(...args){
 		return (this.get(args[0]) || this.initialize()).set(...args);
-	}
+	},
 
-	get(token){
+	get: function(token){
 		return is.str(token) && Module.get(this.resolve(token));
-	}
+	},
 
-	initialize(){
+	initialize(...args){
 		this.ready = P();
 		this.dependencies = [];
 		this.dependents = [];
 
+		Module.register(this);
 		return this; // see instantiate()
-	}
+	},
 
 	resolve(token){
 		const parts = token.split("/");
@@ -553,7 +558,7 @@ var Module = window.Module = Base.extend({
 			token = "/" + Module.base + "/" + token;
 
 		return token; // the transformed token is now the id
-	}
+	},
 
 	reinitialize: function(){
 		// have we defined?
@@ -579,16 +584,27 @@ var Module = window.Module = Base.extend({
 		}
 
 	},
-	import: function(token){
-		// should resolve with this before constructor
+	import(token){
+		// should this.resolve(token)
 		// but resolve isn't relative right now anyway (todo)
 		return (new this.constructor(token)).register(this);
-	}
+	},
+
+	q(){
+		// set_id, but no factory (after 1 tick?)
+		// or, auto clear queued request, even if sync?
+		if (!this.factory && !this.queued && !this.requested){
+			this.queued = setTimeout(this.request.bind(this), 0);
+		}
+	},
 
 	register(dependent){
 		this.dependents.push(dependent);
+
+		this.q();
+
 		return this.ready;
-	}
+	},
 
 	exec(){
 		var params = Module.params(this.factory);
@@ -613,38 +629,64 @@ var Module = window.Module = Base.extend({
 	},
 
 	set_id(id){
-		this.id = id;
+		if (this.id && this.id !== id)
+			throw "do not reset id";
 
-		// cache me
-		Module.set(this.id, this);
-	}
+		if (!this.id){
+			this.id = id;
+
+			// cache me
+			Module.set(this.id, this);
+		} else {
+			// this.id && this.id === id
+			// noop ok
+		}
+	},
+
+	id_from_src(){
+		if (!this.id){
+			const a = document.createElement("a");
+			a.href = document.currentScript.src;
+
+			this.set({
+				id: a.pathname,
+				log: true // might need to be adjusted
+			})
+		}
+	},
 
 	set_token(token){
 		this.token = token;
 		this.set_id(this.resolve(this.token));
-	}
+	},
 	
 	set_deps(deps){
-		if (this.is_defined)
+		if (this.factory)
 			throw "provide deps before factory fn";
 
 		this.deps = deps;
-	}
+	},
 
 	set_factory(factory){
+		if (this.factory)
+			throw "don't re-set factory fn";
 		this.factory = factory;
 
-		if (this.queued)
-			clearTimeout(this.queued);
 
 		this.deps = this.deps || [];
-		this.is_defined = true;
 
 		// all the magic, right here
 		this.ready.resolve(
 			Promise.all(this.deps.map(dep => this.import(dep)))
 				.then(args => this.exec.apply(this, args))
 		);
+
+		// for anonymous modules (no id)
+		this.id_from_src();
+		
+		// 
+		if (this.queued)
+			clearTimeout(this.queued);
 	},
 
 	set$(arg){
@@ -664,56 +706,38 @@ var Module = window.Module = Base.extend({
 			console.error("whoops");
 
 		return this;
-	}
+	},
 
-	set_(){
-		this.id_from_src();
-	}
-
-	id_from_src(){
-		if (!this.id){
-			const a = document.createElement("a");
-			a.href = document.currentScript.src;
-
-			this.set({
-				id: a.pathname,
-				log: true // might need to be adjusted
-			})
-		}
-	}
 
 	set_debug(value){
 		this.debug = logger(value);
 		this.log = logger(value);
-	}
+	},
 
 	require(token){
-		// this makes little sense here...
-		// if there's no cached module, don't create one
-		// this.get(token) => resolve and return
-		var module = new this.constructor(token);
+		const module = this.get(token);
+		if (!module)
+			throw "module not preloaded";
 		return module.value;
-	}
+	},
 
 	request(){
 		this.queued = false;
-		if (!this.defined && !this.requested){
+		
+		if (this.factory)
+			throw "request wasn't dequeued";
+
+		if (!this.requested){
 			this.script = document.createElement("script");
 			this.src = this.id;
 			this.script.src = this.src;
-
-			// used in global define() function as document.currentScript.module
-			// this enables anonymous modules to be defined/require without the need for an id
-				// but, that means you can't concatenate it into a bundle...
-			this.script.module = this;
-
-			// this.debug("request", this.id);
 			document.head.appendChild(this.script);
 			this.requested = true;
 		} else {
 			throw "trying to re-request?"
 		}
 	},
+
 	request2: function(){
 		this.queued = false;
 		if (!this.defined && !this.requested){
@@ -726,9 +750,11 @@ var Module = window.Module = Base.extend({
 			throw "trying to re-request?";
 		}
 	},
+
 	requireRegExp: function(){
 		return /require\s*\(['"]([^'"]+)['"]\);?/gm;
 	},
+
 	functionize: function(data){
 		var re = this.requireRegExp();
 		this.deps = [];
@@ -749,8 +775,22 @@ Module.get = function(id){
 
 Module.set = function(id, module){
 	this.modules[id] = module;
+	this.view.append(ModuleView({
+		module: module
+	}));
+
 };
 
+Module.docready
+
+
+const ModuleView = View.extend({
+	name: "ModuleView",
+	render(){
+		this.append("a module");
+		console.log(this.module);
+	}
+});
 
 // Module.url = function(token){
 // 	var a = document.createElement("a");
@@ -775,6 +815,5 @@ Module.params = function(fn){
 	// console.log(result);
 	return result;
 };
-
 
 })();
