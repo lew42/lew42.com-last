@@ -98,65 +98,6 @@ var P = window.P = function(){
 	return p;
 };
 
-var set_old = function(){
-	var arg;
-	for (var i = 0; i < arguments.length; i++){
-		arg = arguments[i];
-
-		// pojo arg
-		if (arg && arg.constructor === Object){
-
-			// iterate over arg props
-			for (var j in arg){
-
-				// set_*
-				if (this["set_" + j]){
-					this["set_" + j](arg[j]);
-					// create a .set_assign() method that simply calls assign with the arg...
-
-				// "assign" prop will just call assign
-				} else if (j === "assign") {
-					this.assign(arg[j]);
-
-				} else if (this[j] && this[j].set){
-					this[j].set(arg[j]);
-
-				// existing prop is a pojo - "extend" it
-				} else if (this[j] && this[j].constructor === Object){
-
-					// make sure its safe
-					if (this.hasOwnProperty(j))
-						set.call(this[j], arg[j]);
-
-					// if not, protect the prototype
-					else {
-						this[j] = set.call(Object.create(this[j]), arg[j]);
-					}
-
-				// everything else, assign
-				} else {
-					// basically just arrays and fns...
-					// console.warn("what are you", arg[j]);
-					this[j] = arg[j];
-				}
-			}
-
-		// non-pojo arg
-		} else if (this.set_value){
-			// auto apply if arg is array?
-			this.set_value(arg);
-
-		// oops
-		} else {
-			console.warn("not sure what to do with", arg);
-		}
-	}
-
-	return this; // important
-};
-
-
-
 var set = function(...args){
 	for (const arg of args){
 		// pojo arg
@@ -275,8 +216,291 @@ Base.extend = function(...args){
 	return Ext;
 };
 
-var debug = false;
+const View = Base.extend({
+	tag: "div",
+	instantiate: function(){
+		this.constructs.apply(this, arguments);
+		this.initialize();
+	},
+	initialize: function(){
+		// if we pass constructs that are non-pojos, they get appended
+		// in order to append, we have to render_el earlier
+		// but we don't want to always render_el before assigning pojos, because then we can't change the .tag
+		if (!this.el) this.render_el();
+		this.append(this.render);
+		this.init();
+	},
+	init: function(){},
+	render: function(){},
+	render_el: function(){
+		if (!this.el){
+			this.el = document.createElement(this.tag);
 
+			View.captor && View.captor.append(this);
+
+			// if (this.name)
+			// 	this.addClass(this.name);
+
+			// if (this.type)
+			// 	this.addClass(this.type);
+
+			this.classes && this.addClass(this.classes);
+		}
+	},
+	constructs: function(){
+		var arg;
+		for (var i = 0; i < arguments.length; i++){
+			arg = arguments[i];
+			if (is.pojo(arg)){
+				this.assign(arg);
+			} else {
+				if (!this.el) this.render_el();
+				this.append(arg);
+			}
+		}
+	},
+	set: function(){
+		this.empty();
+		this.append.apply(this, arguments);
+		return this;
+	},
+	append: function(){
+		var arg;
+		for (var i = 0; i < arguments.length; i++){
+			arg = arguments[i];
+			if (arg && arg.el){
+				arg.parent = this;
+				this.el.appendChild(arg.el);
+			} else if (is.pojo(arg)){
+				this.append_pojo(arg);
+			} else if (is.obj(arg)){
+				this.append_obj(arg);
+			} else if (is.arr(arg)){
+				this.append.apply(this, arg);
+			} else if (is.fn(arg)){
+				this.append_fn(arg);
+			} else {
+				// DOM, str, undefined, null, etc
+				this.el.append(arg);
+			}
+		}
+		return this;
+	},
+	append_fn: function(fn){
+		View.set_captor(this);
+		var value = fn.call(this, this);
+		View.restore_captor();
+
+		if (is.def(value))
+			this.append(value);
+	},
+	append_pojo: function(pojo){
+		if (pojo.path){
+			this.append_path(pojo);
+		} else {
+			for (var prop in pojo){
+				this.append_prop(prop, pojo[prop]);
+			}
+		}
+	},
+	append_obj: function(obj){
+		if (obj.render){
+			this.append(obj.render())
+		} else {
+			console.warn("not sure here");
+		}
+	},
+	append_prop: function(prop, value){
+		var view;
+		if (value && value.el){
+			view = value;
+		} else {
+			view = View().append(value);
+		}
+
+		this[prop] = view
+			.addClass(prop)
+			.appendTo(this);
+
+		return this;
+	},
+	append_path: function(path){
+		if (is.obj(path) && path.path){
+			if (path.target){
+				this.path(path.target).append(this.path(path.path));
+			} else {
+				this.append(this.path(path.path));
+			}
+		}
+
+		return this;
+	},
+	path: function(path){
+		var parts, value = this;
+		if (is.str(path)){
+			parts = path.split(".");
+		} else if (is.arr(path)) {
+			parts = path;
+		}
+
+		if (parts[0] === ""){
+			parts = parts.slice(1);
+		}
+
+		if (parts[parts.length - 1] === ""){
+			console.warn("forgot how to do this");
+		}
+
+		for (var i = 0; i < parts.length; i++){
+			value = value[parts[i]];
+		}
+
+		return value;
+	},
+	appendTo: function(view){
+		if (is.dom(view)){
+			view.appendChild(this.el);
+		} else {
+			view.append(this);
+		}
+		return this;
+	},
+	addClass: function(){
+		var arg;
+		for (var i = 0; i < arguments.length; i++){
+			arg = arguments[i];
+			if (is.arr(arg))
+				this.addClass.apply(this, arg);
+			else if (arg.indexOf(" ") > -1)
+				this.addClass.apply(this, arg.split(" "));
+			else
+				this.el.classList.add(arg);
+		}
+		return this;
+	},
+	removeClass: function(className){
+		var arg;
+		for (var i = 0; i < arguments.length; i++){
+			arg = arguments[i];
+			if (is.arr(arg))
+				this.removeClass.apply(this, arg);
+			else if (arg.indexOf(" ") > -1)
+				this.removeClass.apply(this, arg.split(" "));
+			else
+				this.el.classList.remove(arg);
+		}
+		return this;
+	},
+	hasClass: function(className){
+		return this.el.classList.contains(className);
+	},
+	attr: function(name, value){
+		this.el.setAttribute(name, value);
+		return this;
+	},
+	click: function(cb){
+		this.el.addEventListener("click", cb.bind(this));
+		return this;
+	},
+	on: function(event, cb){
+		var bound = cb.bind(this);
+		this.el.addEventListener(event, bound);
+		return bound; // so you can remove it
+	},
+	off: function(event, cb){
+		this.el.removeEventListener(event, cb);
+		return this; //?
+	},
+	empty: function(){
+		this.el.innerHTML = "";
+		return this;
+	},
+	focus: function(){
+		this.el.focus();
+		return this;
+	},
+	show: function(){
+		this.el.style.display = "";
+		return this;
+	},
+	styles: function(){
+		return getComputedStyle(this.el);
+	},
+	// inline styles
+	style: function(prop, value){
+		// set with object
+		if (is.obj(prop)){
+			for (var p in prop){
+				this.style(p, prop[p]);
+			}
+			return this;
+
+		// set with "prop", "value"
+		} else if (prop && is.def(value)) {
+			this.el.style[prop] = value;
+			return this;
+
+		// get with "prop"
+		} else if (prop) {
+			return this.el.style[prop];
+
+		// get all
+		} else if (!arguments.length){
+			return this.el.style;
+		} else {
+			throw "whaaaat";
+		}
+	},
+	toggle: function(){
+		if (this.styles().display === "none")
+			return this.show();
+		else {
+			return this.hide();
+		}
+	},
+	index: function(){
+		var index = 0, prev;
+		// while (prev = this.el.previousElementSibling)
+	},
+	hide: function(){
+		this.el.style.display = "none";
+		return this;
+	},
+	remove: function(){
+		this.el.parentNode && this.el.parentNode.removeChild(this.el);
+		return this;
+	},
+	editable(remove){
+		remove = (remove === false);
+		const hasAttr = this.el.hasAttribute("contenteditable");
+
+		if (remove && hasAttr){
+			console.warn(this.el, "remove ce");
+			this.el.removeAttribute("contenteditable");
+		} else if (!remove && !hasAttr) {
+			console.warn(this.el, "add ce");
+			this.attr("contenteditable", true)
+		}
+		return this;
+	},
+	value(){
+		// get&set?
+		return this.el.innerHTML;
+	}
+});
+
+View.assign({
+	previous_captors: [],
+	set_captor: function(view){
+		this.previous_captors.push(this.captor);
+		this.captor = view;
+	},
+	restore_captor: function(){
+		this.captor = this.previous_captors.pop();
+	}
+});
+
+const debug = false;
 var Module = window.Module = Base.extend({
 	name: "Module",
 	base: "modules",
@@ -294,12 +518,11 @@ var Module = window.Module = Base.extend({
 
 		if (cached){
 			cached.set.apply(cached, arguments);
-			cached.reinitialize();
-			return cached;
+			return cached;  // important
 
 		} else {
-			this.set.apply(this, arguments);
 			this.initialize();
+			this.set.apply(this, arguments);
 			return this;
 		}
 	},
@@ -336,9 +559,6 @@ var Module = window.Module = Base.extend({
 
 		// cache me
 		Module.set(this.id, this);
-
-		// handle incoming arguments
-		this.reinitialize();
 	},
 	reinitialize: function(){
 		// have we defined?
@@ -364,26 +584,6 @@ var Module = window.Module = Base.extend({
 		}
 
 	},
-	define: function(){
-		// clear the request, if queued
-		if (this.queued)
-			clearTimeout(this.queued);
-
-		this.defined = this.factory;
-
-		if (this.deps){
-			this.debug("Defined Module('"+this.id+"', [" + this.deps.join(", ")+ "])");
-
-			this.ready.resolve(
-				Promise.all( this.deps.map((dep) => this.import(dep)) )
-					   .then((args) => this.exec.apply(this, args))
-			);
-
-		} else {
-			this.debug("Defined Module('"+this.id+"')");
-			this.ready.resolve(this.exec());
-		}
-	},
 	import: function(token){
 		var module = new this.constructor(token);
 			// checks cache, returns existing or new
@@ -393,6 +593,7 @@ var Module = window.Module = Base.extend({
 		return module.ready;
 	},
 	exec: function(){
+		console.log("exec?");
 		var params = Module.params(this.factory);
 		var ret;
 
@@ -416,13 +617,38 @@ var Module = window.Module = Base.extend({
 		this.token = token;
 		this.id = this.resolve(this.token);
 	},
-	set_: function(arg){
+	
+	set_deps(deps){
+		if (this.is_defined)
+			throw "provide deps before factory fn";
+
+		this.deps = deps;
+	},
+
+	set_factory(factory){
+		console.log("set_factory");
+		this.factory = factory;
+
+		if (this.queued)
+			clearTimeout(this.queued);
+
+		this.deps = this.deps || [];
+		this.is_defined = true;
+
+		// all the magic, right here
+		this.ready.resolve(
+			Promise.all(this.deps.map(dep => this.import(dep)))
+				.then(args => this.exec.apply(this, args))
+		);
+	},
+
+	set_(arg){
 		if (typeof arg === "string")
 			this.set_token(arg);
 		else if (toString.call(arg) === '[object Array]')
-			this.deps = arg;
+			this.set_deps(arg);
 		else if (typeof arg === "function")
-			this.factory = arg;
+			this.set_factory(arg);
 		else if (typeof arg === "object")
 			this.assign(arg);
 		else if (typeof arg === "undefined"){
