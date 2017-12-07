@@ -85,6 +85,49 @@
 	window.log = logger(true);
 	window.debug = logger(false);
 
+
+
+
+	const is = {
+		arr: function(value){
+			return toString.call(value) === '[object Array]';
+		},
+		obj: function(value){
+			return typeof value === "object" && !is.arr(value);
+		},
+		dom: function(value){
+			return value && value.nodeType > 0;
+		},
+		el: function(value){
+			return value && value.nodeType === 1;
+		},
+		str: function(value){
+			return typeof value === "string";
+		},
+		num: function(value){
+			return typeof value === "number";
+		},
+		bool: function(value){
+			return typeof value === 'boolean';
+		},
+		fn: function(value){
+			return typeof value === 'function';
+		},
+		def: function(value){
+			return typeof value !== 'undefined';
+		},
+		undef: function(value){
+			return typeof value === 'undefined';
+		},
+		/// seems to work
+		pojo: function(value){
+			return is.obj(value) && value.constructor === Object;
+		},
+		proto: function(value){
+			return is.obj(value) && value.constructor && value.constructor.prototype === value;
+		}
+	};
+
 var P = window.P = function(){
 	var $resolve, $reject;
 	var p = new Promise(function(resolve, reject){
@@ -223,6 +266,7 @@ Base.extend = function(...args){
 };
 
 const View = Base.extend({
+	name: "View",
 	tag: "div",
 	instantiate(...args){
 		this.set(...args);
@@ -257,6 +301,7 @@ const View = Base.extend({
 		}
 	},
 	set(...args){
+		this.render_el(); // in case it hasn't been
 		var hasBeenEmptied = false;
 		for (const arg of args){
 			// empty once if .set() will .append()
@@ -509,12 +554,6 @@ View.assign({
 	}
 });
 
-const is = {
-	str(value){
-		return typeof value === "string";
-	}
-};
-
 const debug = false;
 
 var Module = window.Module = Base.extend({
@@ -536,7 +575,6 @@ var Module = window.Module = Base.extend({
 		this.dependencies = [];
 		this.dependents = [];
 
-		Module.register(this);
 		return this; // see instantiate()
 	},
 
@@ -760,6 +798,13 @@ var Module = window.Module = Base.extend({
 		this.deps = [];
 		this.deps.push(re.exec(this.xhr.responseText)[1]);
 		console.log("functionize", this.xhr.responseText);
+	},
+
+	render(){
+		this.views = this.views || [];
+		const view = ModuleView({ module: this });
+		this.views.push(view);
+		return view;
 	}
 });
 
@@ -775,19 +820,38 @@ Module.get = function(id){
 
 Module.set = function(id, module){
 	this.modules[id] = module;
-	this.view.append(ModuleView({
-		module: module
-	}));
+	this.view.append(module.render());
 
 };
 
-Module.docready
+Module.doc = new Promise((res, rej) => {
+	if (/comp|loaded/.test(document.readyState)){
+		res();
+	} else {
+		document.addEventListener("DOMContentLoaded", res);
+	}
+});
+
+Module.view = View("MODULES");
+
+Module.doc.then(function(){
+	document.body.appendChild(Module.view.el);
+});
 
 
 const ModuleView = View.extend({
 	name: "ModuleView",
 	render(){
-		this.append("a module");
+		const module = this.module;
+		this.append({
+			label: this.module.id,
+			dependencies: View({
+				render(){
+					for (const dep of module.dependencies)
+						dep.render();
+				}
+			})
+		});
 		console.log(this.module);
 	}
 });
