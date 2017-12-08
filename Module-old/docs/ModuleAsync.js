@@ -265,7 +265,7 @@ Base.extend = function(...args){
 	return Ext;
 };
 
-const View = Base.extend({
+const View = window.View = Base.extend({
 	name: "View",
 	tag: "div",
 	instantiate(...args){
