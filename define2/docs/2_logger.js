@@ -9,12 +9,13 @@ define.logger = (function(){
 		}
 	};
 
-	const console_methods = ["log", "group", "groupCollapsed", "groupEnd", "debug", "trace", "error", "warn", "info", "time", "timeEnd", "dir"];
 
 	const noop = function(){};
 
 	const active = logger.active = console.log.bind(console);
 	const inactive = logger.inactive = function(){};
+	
+	const console_methods = ["log", "group", "groupCollapsed", "groupEnd", "debug", "trace", "error", "warn", "info", "time", "timeEnd", "dir"];
 	
 	for (const method of console_methods){
 		active[method] = console[method].bind(console);

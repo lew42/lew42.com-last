@@ -1,7 +1,7 @@
 define.Module = class Module extends define.Base {
 
 	constructor(...args){
-		super()
+		super();
 		return (this.get(args[0]) || this.initialize()).set(...args);
 	}
 
@@ -23,8 +23,7 @@ define.Module = class Module extends define.Base {
 		// token ends with "/", ex: "path/thing/"
 		if (token[token.length-1] === "/"){
 			// repeat last part, ex: "path/thing/thing.js"
-			token = token + parts[parts.length-2] + ".js";
-			
+			token = token + parts[parts.length-2] + ".js";	
 
 		// last part doesn't contain a ".", ex: "path/thing"
 		} else if (parts[parts.length-1].indexOf(".") < 0){
@@ -55,9 +54,12 @@ define.Module = class Module extends define.Base {
 	exec(){
 		this.exports = {};
 
-		console.group(this.id);
+		// log if no dependents
+		const log = define.logger(!this.dependents.length);
+		
+		log.group(this.id);
 		const ret = this.factory.call(this, this.require.bind(this), this.exports, this);
-		console.groupEnd();
+		log.end();
 
 		if (typeof ret !== "undefined")
 			this.exports = ret;
