@@ -1,17 +1,12 @@
-const debug = false;
+define.Module = class Module {
 
-const Module = window.Module = Base.extend("Module", {
-	base: "modules",
-	debug: logger(debug),
-	log: logger(false || debug),
-
-	instantiate(...args){
+	constructor(...args){
 		return (this.get(args[0]) || this.initialize()).set(...args);
-	},
+	}
 
-	get: function(token){
+	get(token){
 		return typeof token === "string" && Module.get(this.resolve(token));
-	},
+	}
 
 	initialize(...args){
 		this.ready = P();
@@ -19,7 +14,7 @@ const Module = window.Module = Base.extend("Module", {
 		this.dependents = [];
 
 		return this; // see instantiate()
-	},
+	}
 
 	resolve(token){
 		const parts = token.split("/");
@@ -39,11 +34,11 @@ const Module = window.Module = Base.extend("Module", {
 			token = "/" + Module.base + "/" + token;
 
 		return token; // the transformed token is now the id
-	},
+	}
 
 	import(token){
 		return (new this.constructor(this.resolve(token))).register(this);
-	},
+	}
 
 	register(dependent){
 		this.dependents.push(dependent);
@@ -53,7 +48,7 @@ const Module = window.Module = Base.extend("Module", {
 		}
 
 		return this.ready; // see import()
-	},
+	}
 
 	exec(){
 		const params = Module.params(this.factory);
@@ -69,14 +64,14 @@ const Module = window.Module = Base.extend("Module", {
 		this.log.end();
 
 		return this.exports;
-	},
+	}
 
 	exec_common(){
 		this.exports = {};
 		const ret = this.factory.call(this, this.require.bind(this), this.exports, this);
 		if (typeof ret !== "undefined")
 			this.exports = ret;
-	},
+	}
 
 	set_id(id){
 		if (this.id && this.id !== id)
@@ -91,7 +86,7 @@ const Module = window.Module = Base.extend("Module", {
 			// this.id && this.id === id
 			// noop ok
 		}
-	},
+	}
 
 	id_from_src(){
 		if (!this.id){
@@ -103,19 +98,19 @@ const Module = window.Module = Base.extend("Module", {
 				log: true // might need to be adjusted
 			})
 		}
-	},
+	}
 
 	set_token(token){
 		this.token = token;
 		this.set_id(this.resolve(this.token));
-	},
+	}
 	
 	set_deps(deps){
 		if (this.factory)
 			throw "provide deps before factory fn";
 
 		this.deps = deps;
-	},
+	}
 
 	set_factory(factory){
 		if (this.factory)
@@ -137,7 +132,7 @@ const Module = window.Module = Base.extend("Module", {
 		// 
 		if (this.queued)
 			clearTimeout(this.queued);
-	},
+	}
 
 	// set(value) is forwarded here, when value is non-pojo 
 	set$(arg){
@@ -157,20 +152,20 @@ const Module = window.Module = Base.extend("Module", {
 			console.error("whoops");
 
 		return this;
-	},
+	}
 
 
 	set_debug(value){
 		this.debug = logger(value);
 		this.log = logger(value);
-	},
+	}
 
 	require(token){
 		const module = this.get(token);
 		if (!module)
 			throw "module not preloaded";
 		return module.exports;
-	},
+	}
 
 	request(){
 		this.queued = false;
@@ -187,90 +182,65 @@ const Module = window.Module = Base.extend("Module", {
 		} else {
 			throw "trying to re-request?"
 		}
-	},
+	}
 
-	request2: function(){
-		this.queued = false;
-		if (!this.defined && !this.requested){
-			this.xhr = new XMLHttpRequest();
-			this.xhr.addEventListener("load", this.functionize.bind(this));
-			this.xhr.open("GET", this.id);
-			this.xhr.send();
-			this.requested = true;
-		} else {
-			throw "trying to re-request?";
+	set(...args){
+		if (this._set)
+			this._set(...args); // pre .set() hook
+
+		for (const arg of args){
+			// pojo arg
+			if (arg && arg.constructor === Object){
+
+				// iterate over arg props
+				for (var j in arg){
+
+					// set_*
+					if (this["set_" + j]){
+						this["set_" + j](arg[j]);
+						// create a .set_assign() method that simply calls assign with the arg...
+
+					// "assign" prop will just call assign
+					} else if (j === "assign") {
+						this.assign(arg[j]);
+
+					} else if (this[j] && this[j].set){
+						this[j].set(arg[j]);
+
+					// existing prop is a pojo - "extend" it
+					} else if (this[j] && this[j].constructor === Object){
+
+						// make sure its safe
+						if (this.hasOwnProperty(j))
+							set.call(this[j], arg[j]);
+
+						// if not, protect the prototype
+						else {
+							this[j] = set.call(Object.create(this[j]), arg[j]);
+						}
+
+					// everything else, assign
+					} else {
+						// basically just arrays and fns...
+						// console.warn("what are you", arg[j]);
+						this[j] = arg[j];
+					}
+				}
+
+			// non-pojo arg
+			} else if (this.set$){
+				// auto apply if arg is array?
+				this.set$(arg);
+
+			// oops
+			} else {
+				console.warn("not sure what to do with", arg);
+			}
 		}
-	},
 
-	requireRegExp: function(){
-		return /require\s*\(['"]([^'"]+)['"]\);?/gm;
-	},
+		if (this.set_)
+			this.set_(...args); // post .set() hook
 
-	functionize: function(data){
-		var re = this.requireRegExp();
-		this.deps = [];
-		this.deps.push(re.exec(this.xhr.responseText)[1]);
-		console.log("functionize", this.xhr.responseText);
-	},
-
-	render(){
-		this.views = this.views || [];
-		const view = ModuleView({ module: this });
-		this.views.push(view);
-		return view;
+		return this; // important
 	}
-});
-
-Module.base = "modules";
-
-Module.modules = {};
-
-// returns module or falsey
-Module.get = function(id){
-	return id && this.modules[id];
-		// id can be false, or undefined?
-};
-
-Module.set = function(id, module){
-	this.modules[id] = module;
-};
-
-Module.doc = new Promise((res, rej) => {
-	if (/comp|loaded/.test(document.readyState)){
-		res();
-	} else {
-		document.addEventListener("DOMContentLoaded", res);
-	}
-});
-
-// Module.url = function(token){
-// 	var a = document.createElement("a");
-// 	a.href = token;
-// 	return {
-// 		token: token,
-// 		url: a.href,
-// 		host: a.host,
-// 		hostname: a.hostname,
-// 		pathname: a.pathname
-// 	};
-// };
-
-const STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;
-const ARGUMENT_NAMES = /([^\s,]+)/g;
-
-Module.params = function(fn){
-	const fnStr = fn.toString().replace(STRIP_COMMENTS, '');
-	var result = fnStr.slice(fnStr.indexOf('(')+1, fnStr.indexOf(')')).match(ARGUMENT_NAMES);
-	if (result === null)
-		result = [];
-	// console.log(result);
-	return result;
-};
-
-
-Module.Base = Base;
-Module.mixin = {
-	assign: Base.assign,
-	events: events,
-
-};
+}

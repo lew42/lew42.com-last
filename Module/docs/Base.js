@@ -26,6 +26,7 @@ Base.prototype.assign(events, {
 });
 
 Base.assign(events, {
+	events: {},
 	extend(...args){
 		const name = typeof args[0] === "string" ? args.shift() : this.name + "Ext";
 		const Ext = this.extend_base(name);

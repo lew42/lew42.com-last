@@ -1,49 +1,46 @@
-const debug = false;
+define.Module = class Module extends define.Base {
 
-const Module = window.Module = Base.extend("Module", {
-	base: "modules",
-	debug: logger(debug),
-	log: logger(false || debug),
-
-	instantiate(...args){
+	constructor(...args){
+		super()
 		return (this.get(args[0]) || this.initialize()).set(...args);
-	},
+	}
 
-	get: function(token){
+	get(token){
 		return typeof token === "string" && Module.get(this.resolve(token));
-	},
+	}
 
 	initialize(...args){
-		this.ready = P();
+		this.ready = Module.P();
 		this.dependencies = [];
 		this.dependents = [];
 
 		return this; // see instantiate()
-	},
+	}
 
 	resolve(token){
 		const parts = token.split("/");
 
-		// token ends with "/", example:
-		// "path/thing/" --> "path/thing/thing.js"
+		// token ends with "/", ex: "path/thing/"
 		if (token[token.length-1] === "/"){
+			// repeat last part, ex: "path/thing/thing.js"
 			token = token + parts[parts.length-2] + ".js";
+			
 
-		// last part doesn't contain a "."
-		// "path/thing" --> "path/thing/thing.js"
+		// last part doesn't contain a ".", ex: "path/thing"
 		} else if (parts[parts.length-1].indexOf(".") < 0){
+			// repeat last part, add ".js", ex: "path/thing/thing.js"
 			token = token + "/" + parts[parts.length-1] + ".js";
 		}
 
 		if (token[0] !== "/")
-			token = "/" + Module.base + "/" + token;
+			token = "/" + define.path + "/" + token;
 
 		return token; // the transformed token is now the id
-	},
+	}
 
 	import(token){
 		return (new this.constructor(this.resolve(token))).register(this);
-	},
+	}
 
 	register(dependent){
 		this.dependents.push(dependent);
@@ -53,30 +50,20 @@ const Module = window.Module = Base.extend("Module", {
 		}
 
 		return this.ready; // see import()
-	},
+	}
 
 	exec(){
-		const params = Module.params(this.factory);
-
-		this.log.group(this.id);
-		
-			// call the .factory
-			if (params[0] === "require")
-				this.exec_common()
-			else
-				this.exports = this.factory.apply(this, arguments)
-
-		this.log.end();
-
-		return this.exports;
-	},
-
-	exec_common(){
 		this.exports = {};
+
+		console.group(this.id);
 		const ret = this.factory.call(this, this.require.bind(this), this.exports, this);
+		console.groupEnd();
+
 		if (typeof ret !== "undefined")
 			this.exports = ret;
-	},
+
+		return this.exports;
+	}
 
 	set_id(id){
 		if (this.id && this.id !== id)
@@ -91,7 +78,7 @@ const Module = window.Module = Base.extend("Module", {
 			// this.id && this.id === id
 			// noop ok
 		}
-	},
+	}
 
 	id_from_src(){
 		if (!this.id){
@@ -103,19 +90,19 @@ const Module = window.Module = Base.extend("Module", {
 				log: true // might need to be adjusted
 			})
 		}
-	},
+	}
 
 	set_token(token){
 		this.token = token;
 		this.set_id(this.resolve(this.token));
-	},
+	}
 	
 	set_deps(deps){
 		if (this.factory)
 			throw "provide deps before factory fn";
 
 		this.deps = deps;
-	},
+	}
 
 	set_factory(factory){
 		if (this.factory)
@@ -133,11 +120,10 @@ const Module = window.Module = Base.extend("Module", {
 
 		// for anonymous modules (no id)
 		this.id_from_src();
-		
-		// 
+
 		if (this.queued)
 			clearTimeout(this.queued);
-	},
+	}
 
 	// set(value) is forwarded here, when value is non-pojo 
 	set$(arg){
@@ -157,20 +143,14 @@ const Module = window.Module = Base.extend("Module", {
 			console.error("whoops");
 
 		return this;
-	},
-
-
-	set_debug(value){
-		this.debug = logger(value);
-		this.log = logger(value);
-	},
+	}
 
 	require(token){
 		const module = this.get(token);
 		if (!module)
 			throw "module not preloaded";
 		return module.exports;
-	},
+	}
 
 	request(){
 		this.queued = false;
@@ -187,90 +167,47 @@ const Module = window.Module = Base.extend("Module", {
 		} else {
 			throw "trying to re-request?"
 		}
-	},
+	}
 
-	request2: function(){
-		this.queued = false;
-		if (!this.defined && !this.requested){
-			this.xhr = new XMLHttpRequest();
-			this.xhr.addEventListener("load", this.functionize.bind(this));
-			this.xhr.open("GET", this.id);
-			this.xhr.send();
-			this.requested = true;
-		} else {
-			throw "trying to re-request?";
+	static P(){
+		var resolve, reject;
+		
+		const p = new Promise(function(res, rej){
+			resolve = res;
+			reject = rej;
+		});
+
+		p.resolve = resolve;
+		p.reject = reject;
+
+		return p;
+	}
+
+	static get(id){
+		if (!this.modules)
+			this.modules = {};
+		return this.modules[id]
+	}
+
+	static set(id, module){
+		this.modules[id] = module;
+	}
+
+	static doc(...cbs){
+		if (!this.document_ready){
+			this.document_ready = new Promise((res, rej) => {
+				if (/comp|loaded/.test(document.readyState))
+					res();
+				else
+					document.addEventListener("DOMContentLoaded", res);
+			});
 		}
-	},
 
-	requireRegExp: function(){
-		return /require\s*\(['"]([^'"]+)['"]\);?/gm;
-	},
-
-	functionize: function(data){
-		var re = this.requireRegExp();
-		this.deps = [];
-		this.deps.push(re.exec(this.xhr.responseText)[1]);
-		console.log("functionize", this.xhr.responseText);
-	},
-
-	render(){
-		this.views = this.views || [];
-		const view = ModuleView({ module: this });
-		this.views.push(view);
-		return view;
+		return this.document_ready.then(...cbs);
 	}
-});
 
-Module.base = "modules";
-
-Module.modules = {};
-
-// returns module or falsey
-Module.get = function(id){
-	return id && this.modules[id];
-		// id can be false, or undefined?
-};
-
-Module.set = function(id, module){
-	this.modules[id] = module;
-};
-
-Module.doc = new Promise((res, rej) => {
-	if (/comp|loaded/.test(document.readyState)){
-		res();
-	} else {
-		document.addEventListener("DOMContentLoaded", res);
+	static base(base){
+		if (base) this._base = base;
+		return this._base || "modules";
 	}
-});
-
-// Module.url = function(token){
-// 	var a = document.createElement("a");
-// 	a.href = token;
-// 	return {
-// 		token: token,
-// 		url: a.href,
-// 		host: a.host,
-// 		hostname: a.hostname,
-// 		pathname: a.pathname
-// 	};
-// };
-
-const STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;
-const ARGUMENT_NAMES = /([^\s,]+)/g;
-
-Module.params = function(fn){
-	const fnStr = fn.toString().replace(STRIP_COMMENTS, '');
-	var result = fnStr.slice(fnStr.indexOf('(')+1, fnStr.indexOf(')')).match(ARGUMENT_NAMES);
-	if (result === null)
-		result = [];
-	// console.log(result);
-	return result;
-};
-
-
-Module.Base = Base;
-Module.mixin = {
-	assign: Base.assign,
-	events: events,
-
-};
+}

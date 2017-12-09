@@ -13,6 +13,8 @@ var http = require("http");
 var chokidar = require("chokidar");
 var WebSocket = require("ws");
 
+const moduleFiles = require("./Module/order.js");
+
 var reloadWatchGlobs = [
 	"./lew42.github.io",
 	"./simple/docs",
@@ -28,6 +30,7 @@ var server = function(){
 
 	app.use("/Module/", express.static(__dirname + "/Module/docs"));
 	app.use("/simple/", express.static(__dirname + "/simple/docs"));
+	app.use("/define2/", express.static(__dirname + "/define2/docs"));
 
 	var server = http.createServer(app);
 	var wss = new WebSocket.Server({
@@ -61,16 +64,11 @@ var server = function(){
 // 		.pipe(gulp.dest("./lew42.github.io"))
 // });
 const moduleDir = __dirname + "/Module/docs/";
-const moduleGlobs = [
-	moduleDir + "prefix.js",
-	moduleDir + "logger.js",
-	moduleDir + "P.js",
-	moduleDir + "events.js",
-	moduleDir + "set.js",
-	moduleDir + "Base.js",
-	moduleDir + "Module.js",
-	moduleDir + "suffix.js"
-];
+const moduleGlobs = [];
+
+for (const file of moduleFiles){
+	moduleGlobs.push(moduleDir + file);
+}
 
 var simpleModule = function(name){
 	return __dirname + "/simple/docs/modules/" + name + "/" + name + ".js";

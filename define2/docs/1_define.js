@@ -1,5 +1,10 @@
-const P = function(){
+define = function(...args){
+	return new define.Module(...args);
+};
+
+define.P = function(){
 	var resolve, reject;
+	
 	const p = new Promise(function(res, rej){
 		resolve = res;
 		reject = rej;
@@ -10,3 +15,5 @@ const P = function(){
 
 	return p;
 };
+
+define.path = "modules";
