@@ -60,9 +60,16 @@ var server = function(){
 // 		}, {}, { ext: ".js" }).on("error", gulp.util.log))
 // 		.pipe(gulp.dest("./lew42.github.io"))
 // });
-
-var moduleGlobs = [
-	__dirname + "/Module/docs/Module.js"
+const moduleDir = __dirname + "/Module/docs/";
+const moduleGlobs = [
+	moduleDir + "prefix.js",
+	moduleDir + "logger.js",
+	moduleDir + "P.js",
+	moduleDir + "events.js",
+	moduleDir + "set.js",
+	moduleDir + "Base.js",
+	moduleDir + "Module.js",
+	moduleDir + "suffix.js"
 ];
 
 var simpleModule = function(name){
@@ -71,9 +78,9 @@ var simpleModule = function(name){
 
 var simpleGlobs = [
 	__dirname + "/lew42.github.io/Module.js",
-	simpleModule("docReady"),
+	// simpleModule("docReady"),
 	simpleModule("is"),
-	simpleModule("Base"),
+	// simpleModule("Base"),
 	__dirname + "/simple/docs/modules/mixin/events.js",
 	simpleModule("mixin"),
 	simpleModule("Base2"),

@@ -1,0 +1,60 @@
+/simple/base/
+	- Base
+	- events?
+	- logger?
+	- P
+	- Module
+
+/simple/Module/
+/simple/modules/View/
+
+
+
+If someone is able to git clone simple, and run it, we can't just set Module.base to "simple/modules".
+
+We could, upon first Module definition, set the Module.base, based on the starting url...?
+	We only need to change it when hosting the repo at /simple/ sub dir.
+
+simple/
+	gulp
+	--> runs @ localhost
+
+lew42/
+	gulp
+	--> imports /simple/gulpfile.js
+	--> imports all other gulpfile's
+	--> sets up one server
+
+We need `reloadWatchGlobs` from each package.
+We need, for /simple/, to configure Module.base = "simple/modules", somehow...
+
+Can the lew42 gulpfile do it?  Maybe it serves...simple.js w/ an extra "Module.base = .."
+
+
+How can we.. inject temporary values from node-land into the client?
+How about, just adding a module?
+	This would work after Module is defined
+
+For the Module repo, we need to set a base dir?
+It might not actually matter?
+
+
+Also, to keep namespaces clean, why not extend Module?
+
+simple.js
+	1. in a closure, const Simple extends Module
+		- this just keeps namespace clean...
+	2. Simple("thing", [], ...);
+
+This just keeps 
+
+
+
+/simple/view/
+/simple/ui/
+...?
+
+simple-base?
+
+simple exported Base, is, and View?
+All these "globals" might be handy/ needed in other "simple" files?

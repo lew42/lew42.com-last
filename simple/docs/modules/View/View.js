@@ -1,4 +1,6 @@
-const View = window.View = Base.extend({
+Module("View", function(require, exports, module){
+
+const View = module.exports = Base.extend({
 	name: "View",
 	tag: "div",
 	instantiate(...args){
@@ -285,4 +287,6 @@ View.assign({
 	restore_captor: function(){
 		this.captor = this.previous_captors.pop();
 	}
+});
+
 });

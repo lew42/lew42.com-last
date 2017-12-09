@@ -1,8 +1,6 @@
-;(function(){
-
 const debug = false;
 
-const Module = window.Module = Base.extend("Module", events, {
+const Module = window.Module = Base.extend("Module", {
 	base: "modules",
 	debug: logger(debug),
 	log: logger(false || debug),
@@ -235,8 +233,6 @@ Module.get = function(id){
 
 Module.set = function(id, module){
 	this.modules[id] = module;
-	this.view.append(module.render());
-
 };
 
 Module.doc = new Promise((res, rej) => {
@@ -244,30 +240,6 @@ Module.doc = new Promise((res, rej) => {
 		res();
 	} else {
 		document.addEventListener("DOMContentLoaded", res);
-	}
-});
-
-Module.view = View("MODULES");
-
-Module.doc.then(function(){
-	document.body.appendChild(Module.view.el);
-});
-
-
-const ModuleView = View.extend({
-	name: "ModuleView",
-	render(){
-		const module = this.module;
-		this.append({
-			label: this.module.id,
-			dependencies: View({
-				render(){
-					for (const dep of module.dependencies)
-						dep.render();
-				}
-			})
-		});
-		console.log(this.module);
 	}
 });
 
@@ -295,4 +267,10 @@ Module.params = function(fn){
 	return result;
 };
 
-})();
+
+Module.Base = Base;
+Module.mixin = {
+	assign: Base.assign,
+	events: events,
+
+};

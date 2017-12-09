@@ -1,6 +1,9 @@
-const is = {
+Module("is", function(require, exports, module){
+
+const is = module.exports = {
 	arr: function(value){
 		return toString.call(value) === '[object Array]';
+		// or return Array.isArray()?
 	},
 	obj: function(value){
 		return typeof value === "object" && !is.arr(value);
@@ -37,3 +40,5 @@ const is = {
 		return is.obj(value) && value.constructor && value.constructor.prototype === value;
 	}
 };
+
+});
