@@ -1,27 +1,106 @@
-;(function(define, assign){
+define.Base = class Base {
 
-	var Base = define.Base = function(){
-		this.instantiate.apply(this, arguments);
-	};
+	constructor(){
+		this.events = {};
+	}
 
-	Base.assign = Base.prototype.assign = assign;
+	get log(){
+		return this._log || define.logger();	
+	}
 
-	Base.prototype.instantiate = function(){};
+	set log(value){
+		this._log = define.logger(value);
+	}
 
-	Base.assign({
-		extend: function(){
-			var Ext = function(){
-				return this.instantiate.apply(this, arguments);
-			};
-			Ext.assign = this.assign;
-			Ext.assign(this);
-			Ext.prototype = Object.create(this.prototype);
-			Ext.prototype.constructor = Ext;
-			Ext.prototype.assign.apply(Ext.prototype, arguments);
+	on(event, cb){
+		var cbs = this.events[event];
+		if (!cbs)
+			cbs = this.events[event] = [];
+		cbs.push(cb);
+		return this;
+	}
 
-			return Ext;
+	emit(event, ...args){
+		const cbs = this.events[event];
+		if (cbs && cbs.length)
+			for (const cb of cbs)
+				cb.apply(this, ...args);
+		return this;
+	}
+
+	off(event, cbForRemoval){
+		const cbs = this.events[event];
+		if (cbs)
+			for (var i = 0; i < cbs.length; i++)
+				if (cbs[i] === cbForRemoval)
+					cbs.splice(i, 1);
+		return this;
+	}
+	
+	assign(...args){
+		for (arg of args)
+			for (const prop in arg)
+				this[prop] = arg[prop];
+		return this;
+	}
+
+	set(...args){
+		if (this._set)
+			this._set(...args); // pre .set() hook
+
+		for (const arg of args){
+			// pojo arg
+			if (arg && arg.constructor === Object){
+
+				// iterate over arg props
+				for (var j in arg){
+
+					// set_*
+					if (this["set_" + j]){
+						this["set_" + j](arg[j]);
+						// create a .set_assign() method that simply calls assign with the arg...
+
+					// "assign" prop will just call assign
+					} else if (j === "assign") {
+						this.assign(arg[j]);
+
+					} else if (this[j] && this[j].set){
+						this[j].set(arg[j]);
+
+					// existing prop is a pojo - "extend" it
+					} else if (this[j] && this[j].constructor === Object){
+
+						// make sure its safe
+						if (this.hasOwnProperty(j))
+							set.call(this[j], arg[j]);
+
+						// if not, protect the prototype
+						else {
+							this[j] = set.call(Object.create(this[j]), arg[j]);
+						}
+
+					// everything else, assign
+					} else {
+						// basically just arrays and fns...
+						// console.warn("what are you", arg[j]);
+						this[j] = arg[j];
+					}
+				}
+
+			// non-pojo arg
+			} else if (this.set$){
+				// auto apply if arg is array?
+				this.set$(arg);
+
+			// oops
+			} else {
+				console.warn("not sure what to do with", arg);
+			}
 		}
-		
-	});
 
-})(define, define.assign);
+		if (this.set_)
+			this.set_(...args); // post .set() hook
+
+		return this; // important
+	}
+};

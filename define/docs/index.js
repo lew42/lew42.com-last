@@ -1,5 +1,6 @@
-define(function(){
-	console.log("define/docs/index.js loaded");
-
-	["thing", "thing.js", "thing/"].forEach((id) => console.log(define.resolve(id)));
+define.path = "define/modules";
+define(["thing", "thing.js"], function(require){
+	const thing = require("thing");
+	const thingjs = require("thing.js");
+	console.log(thing, thingjs);
 });

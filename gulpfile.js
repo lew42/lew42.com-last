@@ -18,7 +18,7 @@ const moduleFiles = require("./Module/order.js");
 var reloadWatchGlobs = [
 	"./lew42.github.io",
 	"./simple/docs",
-	"./Module/docs",
+	"./definea/docs",
 	"!**/*.css",
 	"!.git", "!**/.git"
 ];
@@ -28,9 +28,8 @@ var server = function(){
 	var app = express();
 	app.use(express.static(__dirname + "/lew42.github.io"));
 
-	app.use("/Module/", express.static(__dirname + "/Module/docs"));
 	app.use("/simple/", express.static(__dirname + "/simple/docs"));
-	app.use("/define2/", express.static(__dirname + "/define2/docs"));
+	app.use("/define/", express.static(__dirname + "/define/docs"));
 
 	var server = http.createServer(app);
 	var wss = new WebSocket.Server({
@@ -63,12 +62,19 @@ var server = function(){
 // 		}, {}, { ext: ".js" }).on("error", gulp.util.log))
 // 		.pipe(gulp.dest("./lew42.github.io"))
 // });
-const moduleDir = __dirname + "/Module/docs/";
-const moduleGlobs = [];
-
-for (const file of moduleFiles){
-	moduleGlobs.push(moduleDir + file);
+const definePaths = [];
+for (const filename of require("./define/docs/0rder.js")){
+	definePaths.push(__dirname + "/define/docs/" + filename);
 }
+gulp.task("build-define", function(){
+	return gulp.src(definePaths)
+		.pipe(concat("define.js"))
+		.pipe(gulp.dest(__dirname + "/define/docs/"))
+		.pipe(gulp.dest(__dirname + "/simple/docs/"))
+		.pipe(gulp.dest(__dirname + "/lew42.github.io/"));
+});
+
+
 
 var simpleModule = function(name){
 	return __dirname + "/simple/docs/modules/" + name + "/" + name + ".js";
@@ -89,19 +95,16 @@ var simpleGlobs = [
 ];
 
 gulp.task("watch", function(){
-    gulp.watch(moduleGlobs, ['build-module']);
+    gulp.watch(definePaths, ['build-define']);
 	gulp.watch(simpleGlobs, ['build-simple'])
 });
 
-gulp.task("build-module", function(){
-	return gulp.src(moduleGlobs)
-		.pipe(concat("Module.js"))
-		.pipe(gulp.dest(__dirname + "/lew42.github.io/"));
-});
 
-gulp.task("build-simple", ["build-module"], function(){
+gulp.task("build-simple", ["build-define"], function(){
 	return gulp.src(simpleGlobs)
 		.pipe(concat("simple.js"))
+		.pipe(gulp.dest(__dirname + "/define/docs/"))
+		.pipe(gulp.dest(__dirname + "/simple/docs/"))
 		.pipe(gulp.dest(__dirname + "/lew42.github.io/"));
 });
 
