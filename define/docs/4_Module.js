@@ -17,40 +17,6 @@ define.Module = class Module extends define.Base {
 		return this; // see instantiate()
 	}
 
-	resolve(token){
-		const parts = token.split("/");
-
-		// token ends with "/", ex: "path/thing/"
-		if (token[token.length-1] === "/"){
-			// repeat last part, ex: "path/thing/thing.js"
-			token = token + parts[parts.length-2] + ".js";	
-
-		// last part doesn't contain a ".", ex: "path/thing"
-		} else if (parts[parts.length-1].indexOf(".") < 0){
-			// repeat last part, add ".js", ex: "path/thing/thing.js"
-			token = token + "/" + parts[parts.length-1] + ".js";
-		}
-
-		if (token[0] !== "/")
-			token = "/" + define.path + "/" + token;
-
-		return token; // the transformed token is now the id
-	}
-
-	import(token){
-		return (new this.constructor(this.resolve(token))).register(this);
-	}
-
-	register(dependent){
-		this.dependents.push(dependent);
-
-		if (!this.factory && !this.queued && !this.requested){
-			this.queued = setTimeout(this.request.bind(this), 0);
-		}
-
-		return this.ready; // see import()
-	}
-
 	exec(){
 		this.exports = {};
 
@@ -67,84 +33,59 @@ define.Module = class Module extends define.Base {
 		return this.exports;
 	}
 
-	set_id(id){
-		if (this.id && this.id !== id)
-			throw "do not reset id";
+	// `this.token` is transformed into `this.id`
+	resolve(token){ 
+		var id, 
+			parts;
 
-		if (!this.id){
-			this.id = id;
+		// mimic the base path
+		if (token === "."){
+			if (!this.url)
+				throw "don't define with relative tokens";
 
-			// cache me
-			Module.set(this.id, this);
+			parts = this.url.path.split("/");
+			id = this.url.path + parts[parts.length-2] + ".js";
 		} else {
-			// this.id && this.id === id
-			// noop ok
+			parts = token.split("/");
+
+			// token ends with "/", ex: "path/thing/"
+			if (token[token.length-1] === "/"){
+				// repeat last part, ex: "path/thing/thing.js"
+				id = token + parts[parts.length-2] + ".js";
+
+			// last part doesn't contain a ".", ex: "path/thing"
+			} else if (parts[parts.length-1].indexOf(".") < 0){
+				// repeat last part, add ".js", ex: "path/thing/thing.js"
+				id = token + "/" + parts[parts.length-1] + ".js";
+			} else {
+				id = token;
+			}
+
+			if (id.indexOf("./") === 0){
+				if (!this.url)
+					throw "don't define with relative tokens";
+				id = this.url.path + id.replace("./", "");
+				// token = token.replace("./", ""); // nope - need to parse id->host/path
+			} else if (id[0] !== "/"){
+				id = "/" + define.path + "/" + id;
+			}
 		}
+
+		return id;
 	}
 
-	id_from_src(){
-		if (!this.id){
-			const a = document.createElement("a");
-			a.href = document.currentScript.src;
+	import(token){
+		return (new this.constructor(this.resolve(token))).register(this);
+	}
 
-			this.set({
-				id: a.pathname,
-				log: true // might need to be adjusted
-			})
+	register(dependent){
+		this.dependents.push(dependent);
+
+		if (!this.factory && !this.queued && !this.requested){
+			this.queued = setTimeout(this.request.bind(this), 0);
 		}
-	}
 
-	set_token(token){
-		this.token = token;
-		this.set_id(this.resolve(this.token));
-	}
-	
-	set_deps(deps){
-		if (this.factory)
-			throw "provide deps before factory fn";
-
-		this.deps = deps;
-	}
-
-	set_factory(factory){
-		if (this.factory)
-			throw "don't re-set factory fn";
-
-		this.factory = factory;
-
-		this.deps = this.deps || [];
-
-		// all the magic, right here
-		this.ready.resolve(
-			Promise.all(this.deps.map(dep => this.import(dep)))
-				.then(args => this.exec.apply(this, args))
-		);
-
-		// for anonymous modules (no id)
-		this.id_from_src();
-
-		if (this.queued)
-			clearTimeout(this.queued);
-	}
-
-	// set(value) is forwarded here, when value is non-pojo 
-	set$(arg){
-		if (typeof arg === "string")
-			this.set_token(arg);
-		else if (toString.call(arg) === '[object Array]')
-			this.set_deps(arg);
-		else if (typeof arg === "function")
-			this.set_factory(arg);
-		else if (typeof arg === "object")
-			this.assign(arg);
-		else if (typeof arg === "undefined"){
-			// I think I had an acceptable use case for this, can't remember when it happens
-			console.warn("set(undefined)?");
-		}
-		else
-			console.error("whoops");
-
-		return this;
+		return this.ready; // see import()
 	}
 
 	require(token){
@@ -171,6 +112,89 @@ define.Module = class Module extends define.Base {
 		}
 	}
 
+	set_id(id){
+		if (this.id && this.id !== id)
+			throw "do not reset id";
+
+		if (!this.id){
+			this.id = id;
+			this.url = Module.url(this.id);
+
+			// cache me
+			Module.set(this.id, this);
+		} else {
+			// this.id && this.id === id
+			// noop is ok
+		}
+	}
+
+
+	set_token(token){
+		this.token = token;
+		this.set_id(this.resolve(this.token));
+	}
+	
+	set_deps(deps){
+		if (this.factory)
+			throw "provide deps before factory fn";
+
+		this.deps = deps;
+	}
+
+	set_factory(factory){
+		if (this.factory)
+			throw "don't re-set factory fn";
+
+		this.factory = factory;
+
+		this.deps = this.deps || [];
+
+		// for anonymous modules (no id)
+		this.id_from_src();
+
+		// all the magic, right here
+		this.ready.resolve(
+			Promise.all(this.deps.map(dep => this.import(dep)))
+				.then(args => this.exec.apply(this, args))
+		);
+
+
+		if (this.queued)
+			clearTimeout(this.queued);
+	}
+
+	id_from_src(){
+		if (!this.id){
+			const a = document.createElement("a");
+			a.href = document.currentScript.src;
+
+			this.set({
+				id: a.pathname,
+				log: true // might need to be adjusted
+			})
+		}
+	}
+
+	// set(value) is forwarded here, when value is non-pojo 
+	set$(arg){
+		if (typeof arg === "string")
+			this.set_token(arg);
+		else if (toString.call(arg) === '[object Array]')
+			this.set_deps(arg);
+		else if (typeof arg === "function")
+			this.set_factory(arg);
+		else if (typeof arg === "object")
+			this.assign(arg);
+		else if (typeof arg === "undefined"){
+			// I think I had an acceptable use case for this, can't remember when it happens
+			console.warn("set(undefined)?");
+		}
+		else
+			console.error("whoops");
+
+		return this;
+	}
+
 	static P(){
 		var resolve, reject;
 		
@@ -192,6 +216,10 @@ define.Module = class Module extends define.Base {
 	}
 
 	static set(id, module){
+		if (!this.modules)
+			this.modules = {};
+		if (this.modules[id])
+			throw "don't redefine a module";
 		this.modules[id] = module;
 	}
 
@@ -211,5 +239,18 @@ define.Module = class Module extends define.Base {
 	static base(base){
 		if (base) this._base = base;
 		return this._base || "modules";
+	}
+
+	static url(original){
+		const a = document.createElement("a");
+		a.href = original;
+		return {
+			original: original,
+			url: a.href,
+			host: a.host,
+			hostname: a.hostname,
+			pathname: a.pathname,
+			path: a.pathname.substr(0, a.pathname.lastIndexOf('/') + 1)
+		};
 	}
 }

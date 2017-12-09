@@ -4,12 +4,16 @@ define.Base = class Base {
 		this.events = {};
 	}
 
-	get log(){
-		return this._log || define.logger();	
-	}
+	// get log(){
+	// 	return this._log || define.logger();	
+	// }
 
-	set log(value){
-		this._log = define.logger(value);
+	// set log(value){
+	// 	this._log = define.logger(value);
+	// }
+
+	set_log(value){
+		this.log = define.logger(value);
 	}
 
 	on(event, cb){

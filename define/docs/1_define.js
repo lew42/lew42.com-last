@@ -2,6 +2,8 @@ define = function(...args){
 	return new define.Module(...args);
 };
 
+define.path = "modules";
+
 define.P = function(){
 	var resolve, reject;
 	
@@ -15,5 +17,3 @@ define.P = function(){
 
 	return p;
 };
-
-define.path = "modules";
