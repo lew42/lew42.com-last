@@ -1,4 +1,8 @@
-Module("View", function(require, exports, module){
+define("View", 
+	["Base"],
+	function(require, exports, module){
+
+const Base = require("Base");
 
 const View = module.exports = Base.extend({
 	name: "View",
@@ -289,4 +293,4 @@ View.assign({
 	}
 });
 
-});
+}); // end

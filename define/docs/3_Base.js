@@ -2,6 +2,7 @@ define.Base = class Base {
 
 	constructor(){
 		this.events = {};
+		this.log = define.logger();
 	}
 
 	// get log(){
@@ -106,5 +107,38 @@ define.Base = class Base {
 			this.set_(...args); // post .set() hook
 
 		return this; // important
+	}
+
+	static get events(){
+		return this._events || (this._events = {});
+	}
+
+	static set events(oops){
+		throw "don't";
+	}
+
+	static on(event, cb){
+		var cbs = this.events[event];
+		if (!cbs)
+			cbs = this.events[event] = [];
+		cbs.push(cb);
+		return this;
+	}
+
+	static emit(event, ...args){
+		const cbs = this.events[event];
+		if (cbs && cbs.length)
+			for (const cb of cbs)
+				cb.apply(this, ...args);
+		return this;
+	}
+
+	static off(event, cbForRemoval){
+		const cbs = this.events[event];
+		if (cbs)
+			for (var i = 0; i < cbs.length; i++)
+				if (cbs[i] === cbForRemoval)
+					cbs.splice(i, 1);
+		return this;
 	}
 };

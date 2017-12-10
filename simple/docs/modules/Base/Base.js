@@ -1,8 +1,11 @@
-define("Base", ["./Base0", "./set", "logger"], function(require, exports, module){
+define("Base", 
+	["./Base0", "mixin/set.js", "mixin/events.js", "logger"], 
+	function(require, exports, module){
 
 const logger = require("logger");
 const Base0 = require("./Base0");
-const set = require("./set");
+const set = require("mixin/set.js");
+const events = require("mixin/events.js");
 
 const Base = module.exports = function(...constructs){
 	if (!(this instanceof Base))
@@ -45,7 +48,7 @@ Base.assign(events, {
 			return this.instantiate(...constructs);\r\n\
 		});");
 		return constructor;
-	},
+	}
+});
 
-});
-});
+}); // end

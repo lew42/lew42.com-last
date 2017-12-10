@@ -2,6 +2,7 @@ define.Module = class Module extends define.Base {
 
 	constructor(...args){
 		super();
+		this.debug = define.logger(this.log);
 		return (this.get(args[0]) || this.initialize()).set(...args);
 	}
 
@@ -71,21 +72,26 @@ define.Module = class Module extends define.Base {
 			}
 		}
 
+		this.debug(this.id, ".resolve(", token, ") =>", id);
 		return id;
 	}
 
 	import(token){
-		return (new this.constructor(this.resolve(token))).register(this);
+		const module = new this.constructor(this.resolve(token));
+		module.register(this);
+
+		this.dependencies.push(module);
+		this.emit("dependency", module);
+		
+		return module.ready;
 	}
 
 	register(dependent){
 		this.dependents.push(dependent);
+		this.emit("dependent", dependent);
 
-		if (!this.factory && !this.queued && !this.requested){
+		if (!this.factory && !this.queued && !this.requested)
 			this.queued = setTimeout(this.request.bind(this), 0);
-		}
-
-		return this.ready; // see import()
 	}
 
 	require(token){
@@ -122,6 +128,8 @@ define.Module = class Module extends define.Base {
 
 			// cache me
 			Module.set(this.id, this);
+
+			this.emit("id", id);
 		} else {
 			// this.id && this.id === id
 			// noop is ok
@@ -221,6 +229,7 @@ define.Module = class Module extends define.Base {
 		if (this.modules[id])
 			throw "don't redefine a module";
 		this.modules[id] = module;
+		this.emit("new", module, id);
 	}
 
 	static doc(...cbs){
