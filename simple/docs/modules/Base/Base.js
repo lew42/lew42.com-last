@@ -1,6 +1,7 @@
 define("Base", 
 	["./Base0", "mixin/set.js", "mixin/events.js", "logger"], 
 	function(require, exports, module){
+////////
 
 const logger = require("logger");
 const Base0 = require("./Base0");

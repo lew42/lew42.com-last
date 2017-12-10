@@ -1,4 +1,5 @@
-define("server", function(require, exports, module){
+define("server", ["logger"], function(require, exports, module){
+	const logger = require("logger");
 	const log = logger(true);
 
 	const server = module.exports = new WebSocket("ws://" + window.location.host);

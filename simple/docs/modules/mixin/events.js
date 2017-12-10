@@ -1,4 +1,4 @@
-define("mixin/events.js", function(){
+define("mixin/events.js", function(require, exports, module){
 
 const events = module.exports = {
 	on(event, cb){

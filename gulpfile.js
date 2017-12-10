@@ -15,13 +15,21 @@ var WebSocket = require("ws");
 
 const moduleFiles = require("./Module/order.js");
 
+const sites = [
+	"rtpovcoll"
+];
+
 var reloadWatchGlobs = [
 	"./lew42.github.io",
 	"./simple/docs",
-	"./definea/docs",
+	"./define/docs",
 	"!**/*.css",
 	"!.git", "!**/.git"
 ];
+
+for (const site of sites){
+	reloadWatchGlobs.push("./"+site);
+}
 
 var server = function(){
 
@@ -30,6 +38,11 @@ var server = function(){
 
 	app.use("/simple/", express.static(__dirname + "/simple/docs"));
 	app.use("/define/", express.static(__dirname + "/define/docs"));
+	// app.use("/rtpovcoll/", express.static(__dirname + "/rtpovcoll/docs"));
+
+	for (const site of sites){
+		app.use("/"+site+"/", express.static(__dirname + "/"+site));
+	}
 
 	var server = http.createServer(app);
 	var wss = new WebSocket.Server({
@@ -81,13 +94,17 @@ var simpleModule = function(name){
 };
 
 var simpleGlobs = [
-	__dirname + "/lew42.github.io/Module.js",
+	__dirname + "/simple/docs/define.js",
+
+	simpleModule("logger"),
+	__dirname + "/simple/docs/modules/Base/Base0/Base0.js",
+	__dirname + "/simple/docs/modules/mixin/events.js",
+	__dirname + "/simple/docs/modules/mixin/set.js",
+	simpleModule("Base"),
 	// simpleModule("docReady"),
 	simpleModule("is"),
 	// simpleModule("Base"),
-	__dirname + "/simple/docs/modules/mixin/events.js",
 	simpleModule("mixin"),
-	simpleModule("Base2"),
 	simpleModule("View"),
 	simpleModule("Test"),
 	simpleModule("server"),

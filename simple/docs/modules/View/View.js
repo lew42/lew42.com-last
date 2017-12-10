@@ -1,7 +1,8 @@
 define("View", 
-	["Base"],
+	["Base", "is"],
 	function(require, exports, module){
 
+const is = require("is");
 const Base = require("Base");
 
 const View = module.exports = Base.extend({

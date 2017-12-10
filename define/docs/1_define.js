@@ -17,3 +17,12 @@ define.P = function(){
 
 	return p;
 };
+
+define.doc = new Promise((res, rej) => {
+	if (/comp|loaded/.test(document.readyState))
+		res();
+	else
+		document.addEventListener("DOMContentLoaded", res);
+});
+
+// end

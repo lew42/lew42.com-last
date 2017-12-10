@@ -1,6 +1,6 @@
-define("Test", ["Base2", "View"], function(require){
+define("Test", ["Base", "View"], function(require){
 
-	var Base2 = require("Base2");
+	var Base = require("Base");
 	var View = require("View");
 	
 	var stylesheet = View({tag: "link"})
@@ -8,17 +8,11 @@ define("Test", ["Base2", "View"], function(require){
 		.attr("href", "/simple/modules/Test/Test.css");
 	document.head.appendChild(stylesheet.el);
 
-
-
-	var TestView = View.extend({
-
-	});
-
 	var body = View({
 		el: document.body
 	});
 
-	var Test = Base2.extend({
+	var Test = Base.extend({
 		instantiate: function(name, fn){
 			this.name = name;
 			this.fn = fn;

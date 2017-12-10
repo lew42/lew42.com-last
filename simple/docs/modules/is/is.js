@@ -1,4 +1,4 @@
-Module("is", function(require, exports, module){
+define("is", function(require, exports, module){
 
 const is = module.exports = {
 	arr: function(value){
