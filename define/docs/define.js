@@ -233,7 +233,7 @@ define.Base = class Base {
 		const cbs = this.events[event];
 		if (cbs && cbs.length)
 			for (const cb of cbs)
-				cb.apply(this, ...args);
+				cb.apply(this, args);
 		return this;
 	}
 
@@ -273,7 +273,7 @@ define.Module = class Module extends define.Base {
 		const log = this.log.if(!this.dependents.length);
 		
 		log.group(this.id);
-		const ret = this.factory.call(this, this.require.bind(this), this.exports, this);
+		const ret = this.factory.call(this.ctx || this, this.require.bind(this), this.exports, this);
 		log.end();
 
 		if (typeof ret !== "undefined")
@@ -283,6 +283,7 @@ define.Module = class Module extends define.Base {
 	}
 
 	// `this.token` is transformed into `this.id`
+	// todo: pass { id: "..." } to if already resolved...
 	resolve(token){ 
 		var id, 
 			parts;
@@ -345,7 +346,7 @@ define.Module = class Module extends define.Base {
 	require(token){
 		const module = this.get(token);
 		if (!module)
-			throw "module not preloaded";
+			console.error("module not preloaded");
 		return module.exports;
 	}
 
@@ -492,4 +493,8 @@ define.Module = class Module extends define.Base {
 			path: a.pathname.substr(0, a.pathname.lastIndexOf('/') + 1)
 		};
 	}
-} // end
+} 
+
+window.dispatchEvent(new Event("define.debug"));
+
+// end

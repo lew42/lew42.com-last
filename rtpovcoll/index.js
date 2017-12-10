@@ -1,10 +1,14 @@
-define(async function(){
+define.path = "rtpovcoll/modules";
+define(["Coll"], async function(require){
 ////////
 
+const Coll = require("Coll");
 await define.doc;
 
 View(function(){
-	this.append("hello world");
+	// for (const module in define.Module.modules){
+	// 	this.append(View(module));
+	// }
 }).appendTo(document.body);
 
 }); // end

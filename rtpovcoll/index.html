@@ -1,8 +1,16 @@
 <!doctype html>
 <html>
 <head>
+	<script src="/rtpovcoll/Base.js"></script>
+	<script>
+		window.addEventListener("define.debug", function(e){
+			define.Module.on("new", function(module, id){
+				console.log("new", module, id);
+			});
+		});
+	</script>
 	<script src="/simple.js"></script>
 	<script src="index.js"></script>
 </head>
-<body>/pov/index.html</body>
+<body></body>
 </html>

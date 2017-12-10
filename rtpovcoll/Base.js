@@ -1,4 +1,4 @@
-define.Base = class Base {
+class BaseClass {
 
 	constructor(){
 		this.events = {};
@@ -129,7 +129,7 @@ define.Base = class Base {
 		const cbs = this.events[event];
 		if (cbs && cbs.length)
 			for (const cb of cbs)
-				cb.apply(this, args);
+				cb.apply(this, ...args);
 		return this;
 	}
 
@@ -141,4 +141,4 @@ define.Base = class Base {
 					cbs.splice(i, 1);
 		return this;
 	}
-};
+}
