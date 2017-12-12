@@ -767,43 +767,61 @@ define("View",
 const is = require("is");
 const Base = require("Base");
 
+/*
+todo:  allow .set_classes to accept an object
+View({
+	classes: {
+		promise_like: thing.then(...) // use first arg as boolean to add/remove "promise_like" class
+		event_like: thing.on("whatever") // could return a "thenable"
+	}
+});
+
+You could automatically classify any thenable property..
+View(thing.on("active"))
+	--> view.thing = the event
+		or view.active...
+	--> as a thenable, we classify the "thing" class...
+*/
+
 const View = module.exports = Base.extend({
 	name: "View",
 	tag: "div",
 	instantiate(...args){
+		this.render_el();
 		this.set(...args);
 		this.initialize();
 	},
 	initialize: function(){
-		this.append(this.render);
+		this.append_fn(this.render);
 		this.init();
 	},
 	init: function(){},
 	render: function(){},
 	render_el: function(){
-		if (!this.el){
+		if (!this.hasOwnProperty("el")){
 			this.el = document.createElement(this.tag);
 
 			View.captor && View.captor.append(this);
 
-			// if (this.name)
-			// 	this.addClass(this.name);
-
-			// if (this.type)
-			// 	this.addClass(this.type);
-
 			this.classes && this.addClass(this.classes);
+		}
+	},
+	set_tag(tag){
+		if (tag !== this.tag){
+			this.tag = tag;
+			delete this.el;
+			this.render_el();
 		}
 	},
 	set$(arg){
 		if (is.pojo(arg)){
+			console.error("do you even happen?");
 			this.assign(arg);
 		} else {
 			this.append(arg);
 		}
 	},
 	set(...args){
-		this.render_el(); // in case it hasn't been
 		var hasBeenEmptied = false;
 		for (const arg of args){
 			// empty once if .set() will .append()
@@ -817,13 +835,8 @@ const View = module.exports = Base.extend({
 		}
 		return this;
 	},
-	append: function(){
-		var arg;
-
-		if (!this.el) this.render_el();
-
-		for (var i = 0; i < arguments.length; i++){
-			arg = arguments[i];
+	append(...args){
+		for (const arg of args){
 			if (arg && arg.el){
 				arg.parent = this;
 				this.el.appendChild(arg.el);
@@ -842,7 +855,8 @@ const View = module.exports = Base.extend({
 		}
 		return this;
 	},
-	append_fn: function(fn){
+
+	append_fn(fn){
 		View.set_captor(this);
 		var value = fn.call(this, this);
 		View.restore_captor();
@@ -850,7 +864,8 @@ const View = module.exports = Base.extend({
 		if (is.def(value))
 			this.append(value);
 	},
-	append_pojo: function(pojo){
+
+	append_pojo(pojo){
 		if (pojo.path){
 			this.append_path(pojo);
 		} else {
@@ -859,19 +874,21 @@ const View = module.exports = Base.extend({
 			}
 		}
 	},
-	append_obj: function(obj){
+
+	append_obj(obj){
 		if (obj.render){
 			this.append(obj.render())
 		} else {
 			console.warn("not sure here");
 		}
 	},
-	append_prop: function(prop, value){
+
+	append_prop(prop, value){
 		var view;
 		if (value && value.el){
 			view = value;
 		} else {
-			view = View().append(value);
+			view = (new this.constructor()).append(value);
 		}
 
 		this[prop] = view
@@ -880,7 +897,9 @@ const View = module.exports = Base.extend({
 
 		return this;
 	},
-	append_path: function(path){
+
+	append_path(path){
+		console.warn("experimental...");
 		if (is.obj(path) && path.path){
 			if (path.target){
 				this.path(path.target).append(this.path(path.path));
@@ -891,7 +910,8 @@ const View = module.exports = Base.extend({
 
 		return this;
 	},
-	path: function(path){
+
+	path(path){
 		var parts, value = this;
 		if (is.str(path)){
 			parts = path.split(".");
@@ -913,7 +933,8 @@ const View = module.exports = Base.extend({
 
 		return value;
 	},
-	appendTo: function(view){
+
+	appendTo(view){
 		if (is.dom(view)){
 			view.appendChild(this.el);
 		} else {
@@ -921,7 +942,8 @@ const View = module.exports = Base.extend({
 		}
 		return this;
 	},
-	addClass: function(){
+
+	addClass(){
 		var arg;
 		for (var i = 0; i < arguments.length; i++){
 			arg = arguments[i];
@@ -934,7 +956,8 @@ const View = module.exports = Base.extend({
 		}
 		return this;
 	},
-	removeClass: function(className){
+
+	removeClass(className){
 		var arg;
 		for (var i = 0; i < arguments.length; i++){
 			arg = arguments[i];
@@ -947,43 +970,57 @@ const View = module.exports = Base.extend({
 		}
 		return this;
 	},
-	hasClass: function(className){
+
+	hasClass(className){
 		return this.el.classList.contains(className);
 	},
-	attr: function(name, value){
+
+	attr(name, value){
 		this.el.setAttribute(name, value);
 		return this;
 	},
-	click: function(cb){
+
+	click(cb){
 		this.el.addEventListener("click", cb.bind(this));
 		return this;
 	},
-	on: function(event, cb){
+
+	set_click(cb){
+		this.click(cb);
+	},
+
+	on(event, cb){
 		var bound = cb.bind(this);
 		this.el.addEventListener(event, bound);
 		return bound; // so you can remove it
 	},
-	off: function(event, cb){
+
+	off(event, cb){
 		this.el.removeEventListener(event, cb);
 		return this; //?
 	},
-	empty: function(){
+
+	empty(){
 		this.el.innerHTML = "";
 		return this;
 	},
-	focus: function(){
+
+	focus(){
 		this.el.focus();
 		return this;
 	},
-	show: function(){
+
+	show(){
 		this.el.style.display = "";
 		return this;
 	},
-	styles: function(){
+
+	styles(){
 		return getComputedStyle(this.el);
 	},
+
 	// inline styles
-	style: function(prop, value){
+	style(prop, value){
 		// set with object
 		if (is.obj(prop)){
 			for (var p in prop){
@@ -1007,25 +1044,30 @@ const View = module.exports = Base.extend({
 			throw "whaaaat";
 		}
 	},
-	toggle: function(){
+
+	toggle(){
 		if (this.styles().display === "none")
 			return this.show();
 		else {
 			return this.hide();
 		}
 	},
-	index: function(){
+
+	index(){
 		var index = 0, prev;
 		// while (prev = this.el.previousElementSibling)
 	},
-	hide: function(){
+
+	hide(){
 		this.el.style.display = "none";
 		return this;
 	},
-	remove: function(){
+
+	remove(){
 		this.el.parentNode && this.el.parentNode.removeChild(this.el);
 		return this;
 	},
+
 	editable(remove){
 		remove = (remove === false);
 		const hasAttr = this.el.hasAttribute("contenteditable");
@@ -1039,6 +1081,7 @@ const View = module.exports = Base.extend({
 		}
 		return this;
 	},
+
 	value(){
 		// get&set?
 		return this.el.innerHTML;
@@ -1054,6 +1097,32 @@ View.assign({
 	restore_captor: function(){
 		this.captor = this.previous_captors.pop();
 	}
+});
+
+View.V = View.extend("V", {
+	instantiate(...args){
+		this.smart_tag(args[0]);
+		this.render_el();
+		this.append(...args);
+		this.initialize();
+	},
+	smart_tag(token){
+		if (is.str(token) && token.indexOf(" ") === -1){
+			if (token.indexOf("span") === 0){
+				this.tag = "span";
+				this.smart_classes(token);
+			} else if (token.indexOf(".") === 0){
+				this.smart_classes(token);
+			}
+		}
+	},
+	smart_classes(token){
+		this.classes = token.split(".").slice(1);
+	}
+});
+
+View.Span = View.extend("Span", {
+	tag: "span"
 });
 
 }); // end

@@ -1,28 +1,47 @@
 ;(function(){
 
+const V = View.V;
+
+const stylesheet = View({tag: "link"})
+	.attr("rel", "stylesheet")
+	.attr("href", "/rtpovcoll/module.css")
+	.appendTo(document.head);
+
 const ModuleView = View.extend("ModuleView", {
 	render(){
 		this.addClass("module");
-		this.module.on("id", id => this.id.set(id));
-		this.module.on("requested", this.requested.bind(this));
-		this.module.on("dependent", d => this.dependents.add(d));
-		this.module.on("dependency", d => this.dependencies.add(d));
-		this.module.on("defined", this.defined.bind(this));
-		this.module.on("resolved", this.resolved.bind(this));
+		// this.module.on("id", id => this.id.set(id));
+		// this.module.on("requested", this.requested.bind(this));
+		// this.module.on("dependent", d => this.dependents.add(d));
+		// this.module.on("dependency", d => this.dependencies.add(d));
+		// this.module.on("defined", this.defined.bind(this));
+		// this.module.on("resolved", this.resolved.bind(this));
 
-		this.module.on("pre-exec", () => {})
-		this.module.on("executed", () => this.addClass("executed"));
+		// this.module.on("pre-exec", () => {})
+		// this.module.on("executed", () => this.addClass("executed"));
 
+		const view = this;
+		const module = this.module;
+		if (!module)
+			debugger;
+		console.log(module);
 		this.append({
-			id: "id: " + this.module.id,
+			bar: V("span", {
+				dependents_count: module.dependents.length,
+				id: module.id,
+				dependencies_count: module.dependencies.length
+			}),
+			id: View(this.module.id),
 			dependencies: View("dependencies", {
 				add: function(dep){
+					this.parent.bar.dependencies_count.set(this.parent.module.dependencies.length);
 					// this.append(ModuleView({ module: dep }));
 					this.append(dep.id);
 				}
 			}),
 			dependents: View("dependents", {
 				add(dependent){
+					this.parent.bar.dependents_count.set(this.parent.module.dependents.length);
 					this.append(dependent.id);
 				}
 			}),

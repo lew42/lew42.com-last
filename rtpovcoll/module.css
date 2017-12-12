@@ -1,0 +1,15 @@
+body { background: #efefef; }
+
+.module {
+	margin-bottom: 5px;
+	background: white;
+}
+
+.module .id {
+	font-weight: bold;
+	padding: 4px 8px;
+}
+
+.module > * {
+	padding: 2px 8px 4px;
+}
