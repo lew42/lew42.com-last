@@ -1,0 +1,17 @@
+If I wanted to encapsulate define.js, and consume it...
+
+// ;(function(export_as){
+
+
+
+})("simple");
+
+const define = ...;
+
+simple-dev.js and simple.js
+
+simple-dev.js needs to have a stand-alone version of the simple framework.
+
+I just did that...
+
+simple = define;

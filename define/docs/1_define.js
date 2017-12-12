@@ -25,4 +25,19 @@ define.doc = new Promise((res, rej) => {
 		document.addEventListener("DOMContentLoaded", res);
 });
 
+define.new = function(){
+	const new_define = function(...args){
+		return new new_define.Module(...args);
+	};
+	new_define.path = define.path;
+	new_define.P = define.P;
+	new_define.doc = define.doc;
+	new_define.new = define.new;
+	new_define.logger = define.logger;
+	new_define.Base = class Base extends define.Base {};
+	new_define.Module = class Module extends define.Module {};
+	new_define.Module.modules = {};
+	return new_define;
+};
+
 // end

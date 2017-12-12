@@ -122,7 +122,8 @@ gulp.task("build-simple", ["build-define"], function(){
 		.pipe(concat("simple.js"))
 		.pipe(gulp.dest(__dirname + "/define/docs/"))
 		.pipe(gulp.dest(__dirname + "/simple/docs/"))
-		.pipe(gulp.dest(__dirname + "/lew42.github.io/"));
+		.pipe(gulp.dest(__dirname + "/lew42.github.io/"))
+		.pipe(gulp.dest(__dirname + "/rtpovcoll/"))
 });
 
 gulp.task("default", ["build-simple", "watch"], function(){

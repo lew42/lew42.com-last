@@ -15,3 +15,5 @@ window.server = require("server");
 module.exports = "so simple";
 
 }); // end
+
+simple = define;

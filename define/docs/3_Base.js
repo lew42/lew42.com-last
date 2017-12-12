@@ -29,7 +29,7 @@ define.Base = class Base {
 		const cbs = this.events[event];
 		if (cbs && cbs.length)
 			for (const cb of cbs)
-				cb.apply(this, ...args);
+				cb.apply(this, args);
 		return this;
 	}
 
