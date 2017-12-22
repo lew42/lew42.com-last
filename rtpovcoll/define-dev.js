@@ -10,21 +10,19 @@ const stylesheet = View({tag: "link"})
 const ModuleView = View.extend("ModuleView", {
 	render(){
 		this.addClass("module");
-		// this.module.on("id", id => this.id.set(id));
-		// this.module.on("requested", this.requested.bind(this));
-		// this.module.on("dependent", d => this.dependents.add(d));
-		// this.module.on("dependency", d => this.dependencies.add(d));
-		// this.module.on("defined", this.defined.bind(this));
-		// this.module.on("resolved", this.resolved.bind(this));
+		this.module.on("id", id => this.id.set(id));
+		this.module.on("requested", this.requested.bind(this));
+		this.module.on("dependent", d => this.dependents.add(d));
+		this.module.on("dependency", d => this.dependencies.add(d));
+		this.module.on("defined", this.defined.bind(this));
+		this.module.on("resolved", this.resolved.bind(this));
 
-		// this.module.on("pre-exec", () => {})
-		// this.module.on("executed", () => this.addClass("executed"));
+		this.module.on("pre-exec", () => {})
+		this.module.on("executed", () => this.addClass("executed"));
 
 		const view = this;
 		const module = this.module;
-		if (!module)
-			debugger;
-		console.log(module);
+		
 		this.append({
 			bar: V("span", {
 				dependents_count: module.dependents.length,

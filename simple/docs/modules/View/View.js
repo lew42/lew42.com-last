@@ -44,13 +44,13 @@ const View = module.exports = Base.extend({
 			this.classes && this.addClass(this.classes);
 		}
 	},
-	set_tag(tag){
-		if (tag !== this.tag){
-			this.tag = tag;
-			delete this.el;
-			this.render_el();
-		}
-	},
+	// set_tag(tag){
+	// 	if (tag !== this.tag){
+	// 		this.tag = tag;
+	// 		delete this.el;
+	// 		this.render_el();
+	// 	}
+	// },
 	set$(arg){
 		if (is.pojo(arg)){
 			console.error("do you even happen?");
@@ -126,7 +126,8 @@ const View = module.exports = Base.extend({
 		if (value && value.el){
 			view = value;
 		} else {
-			view = (new this.constructor()).append(value);
+			console.log(this.tag);
+			view = (new View({tag: this.tag})).append(value);
 		}
 
 		this[prop] = view
@@ -339,18 +340,21 @@ View.assign({
 
 View.V = View.extend("V", {
 	instantiate(...args){
-		this.smart_tag(args[0]);
+		this.smart_tag(args);
 		this.render_el();
 		this.append(...args);
 		this.initialize();
 	},
-	smart_tag(token){
+	smart_tag(args){
+		const token = args[0];
 		if (is.str(token) && token.indexOf(" ") === -1){
 			if (token.indexOf("span") === 0){
 				this.tag = "span";
 				this.smart_classes(token);
+				args.shift();
 			} else if (token.indexOf(".") === 0){
 				this.smart_classes(token);
+				args.shift();
 			}
 		}
 	},
