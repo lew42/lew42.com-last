@@ -2,10 +2,7 @@
 
 const V = View.V;
 
-const stylesheet = View({tag: "link"})
-	.attr("rel", "stylesheet")
-	.attr("href", "/rtpovcoll/module.css")
-	.appendTo(document.head);
+
 
 const ModuleView = View.extend("ModuleView", {
 	render(){
@@ -57,19 +54,23 @@ const ModuleView = View.extend("ModuleView", {
 	}
 });
 
-window.addEventListener("define.debug", function(e){
-	define.Module.on("new", function(module, id){
-		console.log(id);
-		new_module(module, id);
-	});
+const modules = View().addClass("modules");
+
+define.doc.then(() => {
+	const stylesheet = View({tag: "link"})
+		.attr("rel", "stylesheet")
+		.attr("href", "/rtpovcoll/module.css")
+		.appendTo(document.head);
+		
+	modules.appendTo(document.body);
 });
 
-function new_module(module, id){
-
-	ModuleView({
-		module: module
-	}).appendTo(document.body);
-}
-
+window.addEventListener("define.debug", function(e){
+	define.Module.on("new", function(module, id){
+		ModuleView({
+			module: module
+		}).appendTo(modules);
+	});
+});
 
 })(); // end

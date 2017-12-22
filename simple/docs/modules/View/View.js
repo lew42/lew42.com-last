@@ -25,7 +25,7 @@ const View = module.exports = Base.extend({
 	name: "View",
 	tag: "div",
 	instantiate(...args){
-		this.render_el();
+		this.render_el(args[0] && args[0].tag);
 		this.set(...args);
 		this.initialize();
 	},
@@ -35,9 +35,9 @@ const View = module.exports = Base.extend({
 	},
 	init: function(){},
 	render: function(){},
-	render_el: function(){
+	render_el: function(tag){
 		if (!this.hasOwnProperty("el")){
-			this.el = document.createElement(this.tag);
+			this.el = document.createElement(tag || this.tag);
 
 			View.captor && View.captor.append(this);
 
@@ -126,7 +126,6 @@ const View = module.exports = Base.extend({
 		if (value && value.el){
 			view = value;
 		} else {
-			console.log(this.tag);
 			view = (new View({tag: this.tag})).append(value);
 		}
 
