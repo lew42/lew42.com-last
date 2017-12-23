@@ -40,6 +40,18 @@ define.new = function(){
 	return new_define;
 };
 
+define.debugger = function(){
+	this.await_debug = define.P();
+	document.addEventListener("keypress", e => {
+		if (e.code === "Space" && e.ctrlKey){
+			this.await_debug.resolve();
+			console.log("continue?");
+		}
+	});
+
+	return this.await_debug;
+};
+
 // end
 
 define.logger = (function(){
@@ -523,7 +535,14 @@ window.dispatchEvent(new Event("define.debug"));
 
 // end
 
+;(async function(){
+
+if (define.debug)
+	await define.debugger();
+
 define("logger", () => define.logger);
+
+})();
 define("Base/Base0", function(require, exports, module){
 
 function make_constructor(){
@@ -577,7 +596,7 @@ const events = module.exports = {
 		const cbs = this.events[event];
 		if (cbs && cbs.length)
 			for (const cb of cbs)
-				cb.apply(this, ...args);
+				cb.apply(this, args);
 		return this;
 	},
 	off: function(event, cbForRemoval){
@@ -1256,13 +1275,14 @@ define("server", ["logger"], function(require, exports, module){
 
 	server.addEventListener("open", function(){
 		log("server connected");
+		server.send("connection!");
 	});
 
 	server.addEventListener("message", function(e){
 		if (e.data === "reload"){
 			window.location.reload();
 		} else {
-			log("message from server", e);
+			log(e.data);
 		}
 	});
 })

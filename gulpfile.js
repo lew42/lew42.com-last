@@ -13,6 +13,8 @@ var http = require("http");
 var chokidar = require("chokidar");
 var WebSocket = require("ws");
 
+const service = require("./service");
+
 const moduleFiles = require("./Module/order.js");
 
 const sites = [
@@ -52,6 +54,8 @@ var server = function(){
 
 	wss.on("connection", function(ws){
 		console.log("connected");
+
+		service(ws);
 
 		chokidar.watch(reloadWatchGlobs).on("change", (e) => {
 			console.log(e, "changed, sending reload message");
