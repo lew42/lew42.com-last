@@ -6,13 +6,14 @@ define("server", ["logger"], function(require, exports, module){
 
 	server.addEventListener("open", function(){
 		log("server connected");
+		server.send("connection!");
 	});
 
 	server.addEventListener("message", function(e){
 		if (e.data === "reload"){
 			window.location.reload();
 		} else {
-			log("message from server", e);
+			log(e.data);
 		}
 	});
 })

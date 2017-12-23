@@ -1,7 +1,9 @@
-;(function(){
+;(async function(){
 
 const V = View.V;
-
+const Row = View.extend({
+	classes: "row"
+});
 
 
 const ModuleView = View.extend("ModuleView", {
@@ -21,23 +23,24 @@ const ModuleView = View.extend("ModuleView", {
 		const module = this.module;
 		
 		this.append({
-			bar: V("span", {
-				dependents_count: module.dependents.length,
-				id: module.id,
-				dependencies_count: module.dependencies.length
-			}),
-			id: View(this.module.id),
-			dependencies: View("dependencies", {
+			id: module.id,
+			dependencies: View({
+				render(){
+					this.append("dependencies (", this.count = View({tag: "span"}, module.dependencies.length), ")");
+				},
 				add: function(dep){
-					this.parent.bar.dependencies_count.set(this.parent.module.dependencies.length);
+					this.count.set(module.dependencies.length);
 					// this.append(ModuleView({ module: dep }));
-					this.append(dep.id);
+					this.append(View(dep.id));
 				}
 			}),
-			dependents: View("dependents", {
+			dependents: View({
+				render(){
+					this.append("dependents (", this.count = View({tag: "span"}, module.dependents.length), ")");
+				},
 				add(dependent){
-					this.parent.bar.dependents_count.set(this.parent.module.dependents.length);
-					this.append(dependent.id);
+					this.count.set(module.dependents.length);
+					this.append(View(dependent.id));
 				}
 			}),
 			history: "History"
@@ -56,14 +59,15 @@ const ModuleView = View.extend("ModuleView", {
 
 const modules = View().addClass("modules");
 
-define.doc.then(() => {
+
+// define.doc.then(() => {
 	const stylesheet = View({tag: "link"})
 		.attr("rel", "stylesheet")
 		.attr("href", "/rtpovcoll/module.css")
 		.appendTo(document.head);
 		
 	modules.appendTo(document.body);
-});
+// });
 
 window.addEventListener("define.debug", function(e){
 	define.Module.on("new", function(module, id){
@@ -72,5 +76,7 @@ window.addEventListener("define.debug", function(e){
 		}).appendTo(modules);
 	});
 });
+
+define.debug = true;
 
 })(); // end
