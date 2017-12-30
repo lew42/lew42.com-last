@@ -808,10 +808,10 @@ const View = module.exports = Base.extend({
 	instantiate(...args){
 		this.render_el(args[0] && args[0].tag);
 		this.set(...args);
+		this.append_fn(this.render);
 		this.initialize();
 	},
 	initialize: function(){
-		this.append_fn(this.render);
 		this.init();
 	},
 	init: function(){},

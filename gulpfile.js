@@ -18,7 +18,8 @@ const service = require("./service");
 const moduleFiles = require("./Module/order.js");
 
 const sites = [
-	"rtpovcoll"
+	"rtpovcoll",
+	"modules"
 ];
 
 var reloadWatchGlobs = [
