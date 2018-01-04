@@ -1,26 +1,25 @@
-define("Tree", ["Base", "View", "Coll"], function(require){
+define("Tree", 
+	["Base", "View", "Coll", 
+	"Tree/TreeChildren.js", "Tree/TreeView.js"], 
+	function(require, exports, module){
 ////////
 
 const Base = require("Base");
 const View = require("View");
 const Coll = require("Coll");
 
-const TreeView = View.extend("TreeView", {
-	initialize(){
-		this.tree.on("append", this.tree_append.bind(this));
-		this.init();
-	},
-	tree_append(value, item){
-		this
-	},
-	render(){
+const styles = View({tag: "link"})
+	.attr("rel", "stylesheet")
+	.attr("href", "/modules/Tree/Tree.css")
+	.appendTo(document.head);
 
-	}
-});
+const TreeChildren = require("Tree/TreeChildren.js");
+
+const TreeView = require("Tree/TreeView.js");
 
 const Tree = Base.extend("Tree", {
 	View: TreeView,
-	Children: Coll,
+	Children: TreeChildren,
 	instantiate(...args){
 		this.children = new this.Children({
 			tree: this
@@ -36,5 +35,7 @@ const Tree = Base.extend("Tree", {
 		this.children.append(...args);
 	},
 });
+
+module.exports = Tree;
 
 }); // end

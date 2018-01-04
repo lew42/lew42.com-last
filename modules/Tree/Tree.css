@@ -1,0 +1,19 @@
+.tree {
+    background: hsla(0, 0%, 98%, 1);
+    padding: 0.5em 0.9em;
+}
+
+.tree > .name {
+    font-weight:  bold;
+    margin-bottom: 0.5em;
+}
+
+.tree > .children {
+    padding-left: 0.5em;
+    border-left: 0.5em solid #686868;
+    margin-bottom: 1em;
+}
+
+body {
+    background: #efefef;
+}

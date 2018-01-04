@@ -37,7 +37,6 @@ for (const site of sites){
 var server = function(){
 
 	var app = express();
-	app.use(express.static(__dirname + "/lew42.github.io"));
 
 	app.use("/simple/", express.static(__dirname + "/simple/docs"));
 	app.use("/define/", express.static(__dirname + "/define/docs"));
@@ -46,6 +45,8 @@ var server = function(){
 	for (const site of sites){
 		app.use("/"+site+"/", express.static(__dirname + "/"+site));
 	}
+	
+	app.use(express.static(__dirname + "/lew42.github.io"));
 
 	var server = http.createServer(app);
 	var wss = new WebSocket.Server({
@@ -110,6 +111,7 @@ var simpleGlobs = [
 	simpleModule("is"),
 	// simpleModule("Base"),
 	simpleModule("mixin"),
+	simpleModule("Module"),
 	simpleModule("View"),
 	simpleModule("Test"),
 	simpleModule("server"),

@@ -2,6 +2,7 @@ define = function(...args){
 	return new define.Module(...args);
 };
 
+// move this to Module.path
 define.path = "modules";
 
 define.P = function(){
@@ -24,6 +25,10 @@ define.doc = new Promise((res, rej) => {
 	else
 		document.addEventListener("DOMContentLoaded", res);
 });
+
+document.then = function(...args){
+	define.doc.then(...args);
+};
 
 define.new = function(){
 	const new_define = function(...args){
@@ -52,6 +57,9 @@ define.debugger = function(){
 	return this.await_debug;
 };
 
+define.table = function(){
+	console.table(this.Module.modules);
+};
 // end
 
 define.logger = (function(){
@@ -349,12 +357,12 @@ define.Module = class Module extends define.Base {
 				id = this.url.path + id.replace("./", "");
 				// token = token.replace("./", ""); // nope - need to parse id->host/path
 			} else if (id[0] !== "/"){
-				id = "/" + define.path + "/" + id;
+				id = "/" + this.constructor.path + "/" + id;
 			}
 		}
 
 		this.emit("resolved", token, id);
-		this.log(this.id, ".resolve(", token, ") =>", id);
+		// this.log(this.id, ".resolve(", token, ") =>", id);
 		return id;
 	}
 
@@ -407,10 +415,10 @@ define.Module = class Module extends define.Base {
 
 		if (!this.id){
 			this.id = id;
-			this.url = Module.url(this.id);
+			this.url = this.constructor.url(this.id);
 
 			// cache me
-			Module.set(this.id, this);
+			this.constructor.set(this.id, this);
 
 			this.emit("id", id);
 		} else {
@@ -529,7 +537,9 @@ define.Module = class Module extends define.Base {
 			path: a.pathname.substr(0, a.pathname.lastIndexOf('/') + 1)
 		};
 	}
-} 
+}
+
+define.Module.path = define.path || "modules";
 
 window.dispatchEvent(new Event("define.debug"));
 

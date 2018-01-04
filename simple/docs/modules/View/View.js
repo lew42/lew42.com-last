@@ -181,13 +181,11 @@ const View = module.exports = Base.extend({
 		return this;
 	},
 
-	addClass(){
-		var arg;
-		for (var i = 0; i < arguments.length; i++){
-			arg = arguments[i];
+	addClass(...args){
+		for (const arg of args){
 			if (is.arr(arg))
 				this.addClass.apply(this, arg);
-			else if (arg.indexOf(" ") > -1)
+			else if (arg && arg.indexOf(" ") > -1)
 				this.addClass.apply(this, arg.split(" "));
 			else
 				this.el.classList.add(arg);

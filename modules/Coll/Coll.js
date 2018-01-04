@@ -3,13 +3,16 @@ define("Coll", ["Base", "View"], function(require, exports, module){
 
 const Coll = module.exports = Base.extend("Coll", {
 	instantiate(...args){
-		this.items = [];
+		this.children = [];
 		this.set(...args);
 	},
 	append(value){
-		const item = new this.Item(value);
-		this.items.push(item);
-		this.emit("append", item);
+		const child = new this.Child({
+			value: value,
+			coll: this
+		});
+		this.children.push(child);
+		this.emit("append", child);
 		// return item || this;
 	},
 	render(){
@@ -17,10 +20,12 @@ const Coll = module.exports = Base.extend("Coll", {
 			coll: this
 		});
 	},
-	Item: Base.extend("CollItem", {
+	Child: Base.extend("CollChild", {
 		instantiate(...args){
 			this.set(...args);
+			this.initialize();
 		},
+		initialize(){},
 		set$(value){
 			this.set_value(value);
 		},
