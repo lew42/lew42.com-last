@@ -1,6 +1,6 @@
 Module("Stylesheet", function(){
 
-	var Stylesheet = Base2.extend({
+	const Stylesheet = Base.extend({
 		instantiate: function(){
 			this.str = "";
 

@@ -1,6 +1,6 @@
 Module.path = "rtpovcoll/modules";
 
-Module(function(require, exports, module){
+Module(async function(require, exports, module){
 ////////
 
 const Mod = Base.extend("Mod", {
@@ -28,6 +28,8 @@ const Mod = Base.extend("Mod", {
 		localStorage.setItem(this.id, JSON.stringify(this.data));
 	}
 });
+
+await document;
 
 mod = Mod({
 	module: module,
