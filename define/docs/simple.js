@@ -2,6 +2,7 @@ define = function(...args){
 	return new define.Module(...args);
 };
 
+// move this to Module.path
 define.path = "modules";
 
 define.P = function(){
@@ -24,6 +25,10 @@ define.doc = new Promise((res, rej) => {
 	else
 		document.addEventListener("DOMContentLoaded", res);
 });
+
+document.then = function(...args){
+	define.doc.then(...args);
+};
 
 define.new = function(){
 	const new_define = function(...args){
@@ -52,6 +57,9 @@ define.debugger = function(){
 	return this.await_debug;
 };
 
+define.table = function(){
+	console.table(this.Module.modules);
+};
 // end
 
 define.logger = (function(){
@@ -349,12 +357,12 @@ define.Module = class Module extends define.Base {
 				id = this.url.path + id.replace("./", "");
 				// token = token.replace("./", ""); // nope - need to parse id->host/path
 			} else if (id[0] !== "/"){
-				id = "/" + define.path + "/" + id;
+				id = "/" + this.constructor.path + "/" + id;
 			}
 		}
 
 		this.emit("resolved", token, id);
-		this.log(this.id, ".resolve(", token, ") =>", id);
+		// this.log(this.id, ".resolve(", token, ") =>", id);
 		return id;
 	}
 
@@ -407,10 +415,10 @@ define.Module = class Module extends define.Base {
 
 		if (!this.id){
 			this.id = id;
-			this.url = Module.url(this.id);
+			this.url = this.constructor.url(this.id);
 
 			// cache me
-			Module.set(this.id, this);
+			this.constructor.set(this.id, this);
 
 			this.emit("id", id);
 		} else {
@@ -529,7 +537,9 @@ define.Module = class Module extends define.Base {
 			path: a.pathname.substr(0, a.pathname.lastIndexOf('/') + 1)
 		};
 	}
-} 
+}
+
+define.Module.path = define.path || "modules";
 
 window.dispatchEvent(new Event("define.debug"));
 
@@ -779,6 +789,40 @@ define("mixin", ["./events.js", "./set.js"], function(require, exports){
 	exports.events = require("./events.js");
 	exports.set = require("./set.js");
 });
+define("Module", ["Base"], function(require, exports, module){
+////////
+
+const Base = require("Base");
+const proto = define.Module.prototype;
+
+const Module = module.exports = Base.extend("Module", {
+	instantiate(...args){
+		return (this.get(args[0]) || this.initialize()).set(...args);
+	},
+	get: proto.get,
+	initialize: proto.initialize,
+	exec: proto.exec,
+	resolve: proto.resolve,
+	import: proto.import,
+	register: proto.register,
+	require: proto.require,
+	request: proto.request,
+	set_id: proto.set_id,
+	set_token: proto.set_token,
+	set_deps: proto.set_deps,
+	set_factory: proto.set_factory,
+	id_from_src: proto.id_from_src,
+	set$: proto.set$
+});
+
+Module.P = define.Module.P;
+Module.get = define.Module.get;
+Module.set = define.Module.set;
+Module.url = define.Module.url;
+Module.path = "modules";
+
+}); // end
+
 define("View", 
 	["Base", "is"],
 	function(require, exports, module){
@@ -808,10 +852,10 @@ const View = module.exports = Base.extend({
 	instantiate(...args){
 		this.render_el(args[0] && args[0].tag);
 		this.set(...args);
+		this.append_fn(this.render);
 		this.initialize();
 	},
 	initialize: function(){
-		this.append_fn(this.render);
 		this.init();
 	},
 	init: function(){},
@@ -962,13 +1006,11 @@ const View = module.exports = Base.extend({
 		return this;
 	},
 
-	addClass(){
-		var arg;
-		for (var i = 0; i < arguments.length; i++){
-			arg = arguments[i];
+	addClass(...args){
+		for (const arg of args){
 			if (is.arr(arg))
 				this.addClass.apply(this, arg);
-			else if (arg.indexOf(" ") > -1)
+			else if (arg && arg.indexOf(" ") > -1)
 				this.addClass.apply(this, arg.split(" "));
 			else
 				this.el.classList.add(arg);
@@ -1288,13 +1330,14 @@ define("server", ["logger"], function(require, exports, module){
 })
 define("simple", 
 	{ log: false },
-	["Base", "logger", "is", "mixin", "View", "Test", "server"], 
+	["Base", "logger", "is", "Module", "mixin", "View", "Test", "server"], 
 	function(require, exports, module){
 ////////
 
 window.Base = require("Base");
 window.logger = require("logger");
 window.is = require("is");
+window.Module = require("Module");
 window.mixin = require("mixin");
 window.View = require("View");
 window.Test = require("Test");

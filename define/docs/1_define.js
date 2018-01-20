@@ -2,6 +2,7 @@ define = function(...args){
 	return new define.Module(...args);
 };
 
+// move this to Module.path
 define.path = "modules";
 
 define.P = function(){
@@ -24,6 +25,10 @@ define.doc = new Promise((res, rej) => {
 	else
 		document.addEventListener("DOMContentLoaded", res);
 });
+
+document.then = function(...args){
+	define.doc.then(...args);
+};
 
 define.new = function(){
 	const new_define = function(...args){
@@ -52,4 +57,7 @@ define.debugger = function(){
 	return this.await_debug;
 };
 
+define.table = function(){
+	console.table(this.Module.modules);
+};
 // end

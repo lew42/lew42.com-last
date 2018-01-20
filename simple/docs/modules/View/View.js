@@ -27,10 +27,10 @@ const View = module.exports = Base.extend({
 	instantiate(...args){
 		this.render_el(args[0] && args[0].tag);
 		this.set(...args);
+		this.append_fn(this.render);
 		this.initialize();
 	},
 	initialize: function(){
-		this.append_fn(this.render);
 		this.init();
 	},
 	init: function(){},
@@ -181,13 +181,11 @@ const View = module.exports = Base.extend({
 		return this;
 	},
 
-	addClass(){
-		var arg;
-		for (var i = 0; i < arguments.length; i++){
-			arg = arguments[i];
+	addClass(...args){
+		for (const arg of args){
 			if (is.arr(arg))
 				this.addClass.apply(this, arg);
-			else if (arg.indexOf(" ") > -1)
+			else if (arg && arg.indexOf(" ") > -1)
 				this.addClass.apply(this, arg.split(" "));
 			else
 				this.el.classList.add(arg);

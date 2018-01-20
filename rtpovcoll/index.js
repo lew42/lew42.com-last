@@ -2,6 +2,8 @@ define.path = "rtpovcoll/modules";
 define(["Coll"], async function(require){
 ////////
 
+console.log(this);
+
 const Coll = require("Coll");
 await define.doc;
 

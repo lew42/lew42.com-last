@@ -1,0 +1,11 @@
+Syncing JSON to server
+
+Any page has a root dir, which can save data.
+
+module.save("id", "data");
+
+or
+
+module.save("id", thing);
+and 
+thing.save()
