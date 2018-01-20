@@ -1,5 +1,9 @@
 body { background: #efefef; }
 
+.flex {
+	display: flex;
+}
+
 .modules {
 	background: #efefef;
 	padding: 1em;
@@ -12,9 +16,16 @@ body { background: #efefef; }
 
 .module .id {
 	font-weight: bold;
-	padding: 4px 8px;
 }
 
 .module > * {
 	padding: 2px 8px 4px;
+}
+
+.module > .preview {
+	cursor: pointer;
+}
+
+.module > .preview > * {
+	padding: 2px 4px;
 }

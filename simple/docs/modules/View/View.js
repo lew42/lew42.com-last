@@ -1,3 +1,4 @@
+"use strict";
 define("View", 
 	["Base", "is"],
 	function(require, exports, module){
@@ -132,6 +133,10 @@ const View = module.exports = Base.extend({
 		this[prop] = view
 			.addClass(prop)
 			.appendTo(this);
+
+		if (this.parent && !this.parent[prop]){
+			this.parent[prop] = view;
+		}
 
 		return this;
 	},
@@ -332,6 +337,9 @@ View.assign({
 	},
 	restore_captor: function(){
 		this.captor = this.previous_captors.pop();
+	},
+	span(...args){
+		return new View({tag: "span"}, ...args);
 	}
 });
 
