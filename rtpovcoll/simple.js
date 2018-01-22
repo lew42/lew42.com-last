@@ -387,7 +387,7 @@ define.Module = class Module extends define.Base {
 	require(token){
 		const module = this.get(token);
 		if (!module)
-			console.error("module not preloaded");
+			throw "module not preloaded";
 		return module.exports;
 	}
 
