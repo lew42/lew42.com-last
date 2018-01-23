@@ -1,22 +1,28 @@
-Module("Module/local", function(require, exports, module){
+define("Module/local", function(require, exports, module){
 ////////
 
-exports.local = function(id, base){
+module.exports = function(id, base){
 	base.localID = this.id + "::" + id;
-	const data = localStorage.getItem(base.localID);
+	var data = localStorage.getItem(base.localID);
 	if (data){
+		console.log("loaded", data);
+		data = JSON.parse(data);
+		console.log("parsed", data);
 		base.set(data);
+	} else {
+		base.save();
 	}
 
-	base.save(id);
+	// base.save(id);
+	return base;
 };
 
-exports.save = function(obj){
-	if (!obj.localID || !obj.json){
-		throw "oops";
-	}
+// exports.save = function(obj){
+// 	if (!obj.localID || !obj.json){
+// 		throw "oops";
+// 	}
 
-	localStorage.setItem(obj.localID, obj.json());
-};
+// 	localStorage.setItem(obj.localID, obj.json());
+// };
 
 }); // end 

@@ -32,6 +32,7 @@ const CollectionView = View.extend("CollectionView", {
 		this.append("this is a CollectionView");
 
 		this.coll.on("append", v => this.append(v));
+		this.coll.on("append", v => this.append(v));
 	}
 });
 

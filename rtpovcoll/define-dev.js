@@ -41,7 +41,7 @@ const ModuleView = View.extend("ModuleView", {
 		// });
 		const view = this;
 		views["view" + count] = this;
-		console.log("view"+count);
+		// console.log("view"+count);
 		this.module.on("resolved", () => {
 			if (this !== view)
 				debugger;
@@ -56,7 +56,7 @@ const ModuleView = View.extend("ModuleView", {
 		// const view = this;
 		const module = this.module;
 		
-		console.group("appending");
+		// console.group("appending");
 		this.append({
 			preview: V(".flex", {
 				deps: module.dependencies.length,
@@ -97,7 +97,7 @@ const ModuleView = View.extend("ModuleView", {
 		this.preview.click(()=>{
 			this.contents.toggle();
 		});
-		console.groupEnd();
+		// console.groupEnd();
 
 		if (!this.history)
 			debugger;
@@ -128,7 +128,7 @@ const modules = View().addClass("modules");
 
 window.addEventListener("define.debug", function(e){
 	define.Module.on("new", function(module, id){
-		console.group("new", ++count);
+		// console.group("new", ++count);
 		try {
 			const mv = ModuleView({
 				module: module
@@ -136,7 +136,7 @@ window.addEventListener("define.debug", function(e){
 		} catch (e) {
 			throw e;
 		}
-		console.groupEnd();
+		// console.groupEnd();
 	});
 });
 
