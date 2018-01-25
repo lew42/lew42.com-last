@@ -375,7 +375,7 @@ define.Module = class Module extends define.Base {
 	require(token){
 		const module = this.get(token);
 		if (!module)
-			console.error("module not preloaded");
+			throw "module not preloaded";
 		return module.exports;
 	}
 
@@ -779,10 +779,12 @@ define("mixin", ["./events.js", "./set.js"], function(require, exports){
 	exports.events = require("./events.js");
 	exports.set = require("./set.js");
 });
-define("Module", ["Base"], function(require, exports, module){
+define("Module", ["Base", "Module/local"], function(require, exports, module){
 ////////
 
+console.log(this.resolve("Module/local"));
 const Base = require("Base");
+const local = require("Module/local");
 const proto = define.Module.prototype;
 
 const Module = module.exports = Base.extend("Module", {
@@ -802,7 +804,9 @@ const Module = module.exports = Base.extend("Module", {
 	set_deps: proto.set_deps,
 	set_factory: proto.set_factory,
 	id_from_src: proto.id_from_src,
-	set$: proto.set$
+	set$: proto.set$,
+
+	local: local
 });
 
 Module.P = define.Module.P;

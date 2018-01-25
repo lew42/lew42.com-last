@@ -9,7 +9,7 @@ const ValueView = module.exports = View.extend("ValueView", {
 		this.hooks();
 	},
 	hooks(){
-		this.value.on("change", v => this.el.value = v);
+		this.vo.on("change", v => this.el.value = v);
 		this.el.addEventListener("keyup", () => {
 			this.value.set(this.el.value);
 		});
