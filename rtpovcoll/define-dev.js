@@ -9,11 +9,17 @@ var count = 0;
 views = {};
 
 const ModuleView = View.extend("ModuleView", {
+	log_(str){
+		this.history.append(View(str));
+	},
 	render(){
 		this.prerender = count;
 		// debugger;
 		this.addClass("module");
-		this.module.on("id", id => this.id.set(id));
+		this.module.on("id", id => {
+			this.log_("old id: " + this.module.id);
+			this.history.append(View("new id: " + id));
+		});
 		// this.module.on("requested", this.requested.bind(this));
 		this.module.on("dependent", d => {
 			this.dependents.add(d);
@@ -29,26 +35,10 @@ const ModuleView = View.extend("ModuleView", {
 		// 		debugger;
 		// 	this.resolved();
 		// });
-		// Object.defineProperty(this, "history", {
-		// 	get: function(){
-		// 		// debugger;
-		// 		return this._history;
-		// 	},
-		// 	set: function(value){
-		// 		debugger;
-		// 		this._history = value;
-		// 	}
-		// });
 		const view = this;
 		views["view" + count] = this;
 		console.log("view"+count);
-		this.module.on("resolved", () => {
-			if (this !== view)
-				debugger;
-
-			if (!this.history)
-				debugger;
-		});
+		this.module.on("resolved", this.resolved.bind(this));
 
 		// this.module.on("pre-exec", () => {})
 		// this.module.on("executed", () => this.addClass("executed"));
@@ -57,11 +47,13 @@ const ModuleView = View.extend("ModuleView", {
 		const module = this.module;
 		
 		console.group("appending");
+
 		this.append({
 			preview: V(".flex", {
 				deps: module.dependencies.length,
 				arr: "=>",
-				id: module.id,
+				// id: module.id,
+				token: module.token,
 				arr2: "=>",
 				depts: module.dependents.length
 			}),

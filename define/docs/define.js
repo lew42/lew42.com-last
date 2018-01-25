@@ -45,18 +45,6 @@ define.new = function(){
 	return new_define;
 };
 
-define.debugger = function(){
-	this.await_debug = define.P();
-	document.addEventListener("keypress", e => {
-		if (e.code === "Space" && e.ctrlKey){
-			this.await_debug.resolve();
-			console.log("continue?");
-		}
-	});
-
-	return this.await_debug;
-};
-
 define.table = function(){
 	console.table(this.Module.modules);
 };

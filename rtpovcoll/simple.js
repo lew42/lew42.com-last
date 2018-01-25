@@ -45,18 +45,6 @@ define.new = function(){
 	return new_define;
 };
 
-define.debugger = function(){
-	this.await_debug = define.P();
-	document.addEventListener("keypress", e => {
-		if (e.code === "Space" && e.ctrlKey){
-			this.await_debug.resolve();
-			console.log("continue?");
-		}
-	});
-
-	return this.await_debug;
-};
-
 define.table = function(){
 	console.table(this.Module.modules);
 };
@@ -545,14 +533,16 @@ window.dispatchEvent(new Event("define.debug"));
 
 // end
 
-;(async function(){
+// ;(function(){
 
-if (define.debug)
-	await define.debugger();
+// if (define.debug){
+// 	debugger;
+// 	await define.debugger();
+// }
 
 define("logger", () => define.logger);
 
-})();
+// })();
 define("Base/Base0", function(require, exports, module){
 
 function make_constructor(){
@@ -823,7 +813,6 @@ Module.path = "modules";
 
 }); // end
 
-"use strict";
 define("View", 
 	["Base", "is"],
 	function(require, exports, module){
@@ -853,7 +842,7 @@ const View = module.exports = Base.extend({
 	instantiate(...args){
 		this.render_el(args[0] && args[0].tag);
 		this.set(...args);
-		this.append_fn(this.render);
+		this.append(this.render);
 		this.initialize();
 	},
 	initialize: function(){

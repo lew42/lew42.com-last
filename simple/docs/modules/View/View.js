@@ -1,4 +1,3 @@
-"use strict";
 define("View", 
 	["Base", "is"],
 	function(require, exports, module){
@@ -28,7 +27,7 @@ const View = module.exports = Base.extend({
 	instantiate(...args){
 		this.render_el(args[0] && args[0].tag);
 		this.set(...args);
-		this.append_fn(this.render);
+		this.append(this.render);
 		this.initialize();
 	},
 	initialize: function(){

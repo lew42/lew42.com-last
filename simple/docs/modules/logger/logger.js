@@ -1,8 +1,10 @@
-;(async function(){
+// ;(function(){
 
-if (define.debug)
-	await define.debugger();
+// if (define.debug){
+// 	debugger;
+// 	await define.debugger();
+// }
 
 define("logger", () => define.logger);
 
-})();
+// })();

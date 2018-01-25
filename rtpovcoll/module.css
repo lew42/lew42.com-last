@@ -14,7 +14,7 @@ body { background: #efefef; }
 	background: white;
 }
 
-.module .id {
+.module > .preview > .token {
 	font-weight: bold;
 }
 
