@@ -779,12 +779,12 @@ define("mixin", ["./events.js", "./set.js"], function(require, exports){
 	exports.events = require("./events.js");
 	exports.set = require("./set.js");
 });
-define("Module", ["Base", "Module/local"], function(require, exports, module){
+define("Module", ["Base" /*, "Module/local" */], function(require, exports, module){
 ////////
 
-console.log(this.resolve("Module/local"));
+// console.log(this.resolve("Module/local"));
 const Base = require("Base");
-const local = require("Module/local");
+// const local = require("Module/local");
 const proto = define.Module.prototype;
 
 const Module = module.exports = Base.extend("Module", {
@@ -806,7 +806,7 @@ const Module = module.exports = Base.extend("Module", {
 	id_from_src: proto.id_from_src,
 	set$: proto.set$,
 
-	local: local
+	// local: local
 });
 
 Module.P = define.Module.P;

@@ -111,6 +111,7 @@ var simpleGlobs = [
 	simpleModule("is"),
 	// simpleModule("Base"),
 	simpleModule("mixin"),
+	// __dirname + "/simple/docs/modules/Module/local/local.js",
 	simpleModule("Module"),
 	simpleModule("View"),
 	simpleModule("Test"),

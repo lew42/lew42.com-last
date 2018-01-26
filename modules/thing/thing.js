@@ -1,6 +1,10 @@
-Module("thing/", ["View/"], function(View){
+Module("thing", function(require, exports, module){
+////////
 
-var Thing = 123;
+const thing = Base.extend("thing", {
 
-return Thing;
 });
+
+module.exports = thing;
+
+}); // end

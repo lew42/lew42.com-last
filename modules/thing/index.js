@@ -1,7 +1,6 @@
-// define.debug = define.debug.on;
-Module("thing/index", ["View/", "thing/", "thing/thing.tests"], function(View, Thing){
+Module(["thing"], function(require, exports, module){
+////////
 
-View(function(){
-	
-})
-})
+const thing = require("thing");
+
+}); // end
