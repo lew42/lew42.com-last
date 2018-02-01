@@ -50,20 +50,26 @@ const Collection = Base.extend("Collection", {
 			if (is.pojo(arg)){
 				this.append_pojo(arg);
 			} else {
-				this.append_item(arg);
+				this.append_value(arg);
 			}
 		}
 		return this;
 	},
-	append_item(value){
-		const item = new this.Item({
-			coll: this,
-			value: value
-		});
+	append_item(item){
+		if (!(item instanceof this.Item))
+			throw "must append instanceof this.Item";
 
+		item.set({
+			coll: this
+		});
 		this.items[++this.length] = item;
 		this.emit("append", item);
 		return this;
+	},
+	append_value(value){
+		return this.append_item(new this.Item({
+			value: value
+		}));
 	},
 	append_pojo(pojo){
 		for (const prop in pojo){
@@ -72,7 +78,7 @@ const Collection = Base.extend("Collection", {
 	},
 	push(...args){
 		for (const arg of args){
-			this.append_anonymous(arg);
+			this.append_item(arg);
 		}
 	},
 	render(){
