@@ -4,16 +4,23 @@ Module("Collection", ["Value"], function(require, exports, module){
 const Value = require("Value");
 
 const ItemView = View.extend("ItemView", {
-	tag: "input",
 	render(){
-		this.attr("type", "text");
-		this.el.value = this.item.value;
+		this.attr("contenteditable", true);
+		this.append(this.item.value);
 		this.hooks();
 	},
 	hooks(){
-		this.item.on("change", v => this.el.value = v);
+		this.item.on("change", v => {
+			if (!this.lock){
+				console.log("item changed, view is unlocked, change view value");
+				this.set(v);
+			}
+		});
 		this.el.addEventListener("keyup", () => {
-			this.item.set(this.el.value);
+			console.log("keyup, this.item.set(innerHTML)");
+			this.lock = true;
+			this.item.set(this.el.innerHTML);
+			this.lock = false;
 		});
 	}
 });
@@ -23,6 +30,15 @@ const Item = Value.extend("Item", {
 	render(){
 		return new this.View({
 			item: this
+		});
+	},
+	set_coll(coll){
+		this.coll = coll;
+
+		this.on("change", v => {
+			console.log("item change");
+			coll.emit("change", this);
+			coll.save();
 		});
 	}
 });
@@ -51,10 +67,9 @@ const CollectionView = View.extend("CollectionView", {
 		this.coll.on("append", v => this.append(v));
 		// this.coll.on("append", v => this.append(v));
 
-		this.append({
-			name: this.coll.name,
-			children: 
-		})
+		for (const id in this.coll.items){
+			this.append(this.coll.items[id]);
+		}
 	}
 });
 
@@ -67,11 +82,15 @@ const Collection = Base.extend("Collection", {
 		this.items = {};
 		this.length = 0;
 	},
-	load(data){
-		this.set(data);
-		// instantiate items?
+	set_items(items){
+		this.items = items;
+
 		for (const id in this.items){
-			this.items[id] = new this.Item(this.items[id]);
+			this.items[id] = new this.Item({
+				id: id,
+				value: this.items[id],
+				coll: this,
+			});
 		}
 	},
 	append(...args){
@@ -79,24 +98,22 @@ const Collection = Base.extend("Collection", {
 			if (is.pojo(arg)){
 				this.append_pojo(arg);
 			} else {
-				this.append_value(arg);
+				this.append_item(arg);
 			}
 		}
 		return this;
 	},
-	append_item(item){
-		if (!(item instanceof this.Item))
-			throw "must append instanceof this.Item";
-
-		item.set({
+	append_item(value){
+		const item = new this.Item({
+			id: ++this.length,
+			value: value,
 			coll: this
 		});
 
-		item.on("change", v => this.emit("change", item));
-
-		this.items[++this.length] = item;
+		this.items[item.id] = item;
 		this.emit("append", item);
-		return this;
+		this.save();
+		return item;
 	},
 	append_value(value){
 		return this.append_item(new this.Item({
@@ -119,6 +136,7 @@ const Collection = Base.extend("Collection", {
 		});
 	},
 	save(){
+	console.log("saving");
 		if (this.localID){
 			localStorage.setItem(this.localID, this.json());
 		} else {
@@ -128,10 +146,12 @@ const Collection = Base.extend("Collection", {
 	json(){
 		const json = {};
 		json.name = this.name;
+		json.length = this.length;
 		json.items = {};
 		for (const id in this.items){
-			
+			json.items[id] = this.items[id].value;
 		}
+		return JSON.stringify(json);
 	}
 });
 
