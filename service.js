@@ -28,5 +28,8 @@ function action(ws, action, data){
 			ws.send(JSON.stringify(data));
 			break;
 		// case ""
+		case "module.load":
+			ws.send(JSON.stringify(require(data.module)));
+			break;
 	}
 }

@@ -1,3 +1,28 @@
+await file("globby") => resolves with file object?
+
+or File.load("globby") => resolves with file obj
+	> file obj is plural (can represent a tree of files/dirs)
+
+File("globby") => creates hypothetical file, without doing anything
+	> expands globby into structure
+
+file.each() => iterates through all files
+
+FS() might be a better "file and dir" coll/obj
+File() only looks at file(s)
+Dir() only looks at dir(s)
+
+maybe fs() is just a helper function?  But,
+
+fs = FS()
+and
+fs.each()
+ to iterate through all dir and files...
+
+
+
+
+
 read, write, watch
 
 

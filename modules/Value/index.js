@@ -1,4 +1,4 @@
-define(["Value"], async function(require, exports, module){
+Module(["Value"], async function(require, exports, module){
 ////////
 
 const Value = require("Value");

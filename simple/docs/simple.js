@@ -779,12 +779,41 @@ define("mixin", ["./events.js", "./set.js"], function(require, exports){
 	exports.events = require("./events.js");
 	exports.set = require("./set.js");
 });
-define("Module", ["Base" /*, "Module/local" */], function(require, exports, module){
+define("Module/local", function(require, exports, module){
+////////
+
+module.exports = function(id, base){
+	base.localID = this.id + "::" + id;
+	var data = localStorage.getItem(base.localID);
+	if (data){
+		console.log("loaded", data);
+		data = JSON.parse(data);
+		console.log("parsed", data);
+		base.load(data);
+	} else {
+		base.save();
+	}
+
+	// base.save(id);
+	return base;
+};
+
+// exports.save = function(obj){
+// 	if (!obj.localID || !obj.json){
+// 		throw "oops";
+// 	}
+
+// 	localStorage.setItem(obj.localID, obj.json());
+// };
+
+}); // end 
+
+define("Module", ["Base" , "Module/local" ], function(require, exports, module){
 ////////
 
 // console.log(this.resolve("Module/local"));
 const Base = require("Base");
-// const local = require("Module/local");
+const local = require("Module/local");
 const proto = define.Module.prototype;
 
 const Module = module.exports = Base.extend("Module", {
@@ -806,7 +835,7 @@ const Module = module.exports = Base.extend("Module", {
 	id_from_src: proto.id_from_src,
 	set$: proto.set$,
 
-	// local: local
+	local: local
 });
 
 Module.P = define.Module.P;
@@ -1328,6 +1357,19 @@ define("server", ["logger"], function(require, exports, module){
 			log(e.data);
 		}
 	});
+
+	server.obj = function(obj){
+		server.send(JSON.stringify(obj));
+	};
+
+	server.mod = function(id){
+		server.obj({
+			action: "module.load",
+			data: {
+				module: id
+			}
+		});
+	};
 })
 define("simple", 
 	{ log: false },

@@ -56,6 +56,8 @@ var server = function(){
 
 	wss.on("connection", function(ws){
 		console.log("connected");
+		// console.log(ws);
+		// console.log(ws._socket);
 
 		service(ws);
 
@@ -111,7 +113,7 @@ var simpleGlobs = [
 	simpleModule("is"),
 	// simpleModule("Base"),
 	simpleModule("mixin"),
-	// __dirname + "/simple/docs/modules/Module/local/local.js",
+	__dirname + "/simple/docs/modules/Module/local/local.js",
 	simpleModule("Module"),
 	simpleModule("View"),
 	simpleModule("Test"),

@@ -1,4 +1,4 @@
-define("Value", ["Value/ValueView.js"], function(require, exports, module){
+Module("Value", ["Value/ValueView.js"], function(require, exports, module){
 ////////
 
 const ValueView = require("Value/ValueView.js");

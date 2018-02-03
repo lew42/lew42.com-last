@@ -6,7 +6,9 @@ I was going to have Path objects, similar to my nested Route structures.  But ma
 
 
 
-file("*.js") --> search fs
+file("*.js") -> search fs
+file("*.js") -> search fs
+
 
 File("yo")
 	-> file.value = "yo"

@@ -8,7 +8,7 @@ module.exports = function(id, base){
 		console.log("loaded", data);
 		data = JSON.parse(data);
 		console.log("parsed", data);
-		base.set(data);
+		base.load(data);
 	} else {
 		base.save();
 	}

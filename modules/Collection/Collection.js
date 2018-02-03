@@ -1,4 +1,4 @@
-define("Collection", ["Value"], function(require, exports, module){
+Module("Collection", ["Value"], function(require, exports, module){
 ////////
 
 const Value = require("Value");
@@ -27,12 +27,34 @@ const Item = Value.extend("Item", {
 	}
 });
 
+const AddChild = View.extend("AddChild", {
+	classes: "add",
+	render(){
+		this.el.addEventListener("keypress", (e) => {
+			if (e.key === "Enter"){
+				this.submit();
+			}
+		});
+		this.input = View({tag: "input"}).attr("type", "text").attr("placeholder", "add");
+		this.add = View({tag: "button"}, "add").click(() => this.submit());
+	},
+	submit(){
+		this.coll.tree.append(this.input.el.value);
+		this.input.el.value = "";
+	}
+});
+
 const CollectionView = View.extend("CollectionView", {
 	render(){
 		this.append("this is a CollectionView");
 
 		this.coll.on("append", v => this.append(v));
-		this.coll.on("append", v => this.append(v));
+		// this.coll.on("append", v => this.append(v));
+
+		this.append({
+			name: this.coll.name,
+			children: 
+		})
 	}
 });
 
@@ -44,6 +66,13 @@ const Collection = Base.extend("Collection", {
 	instantiate(...args){
 		this.items = {};
 		this.length = 0;
+	},
+	load(data){
+		this.set(data);
+		// instantiate items?
+		for (const id in this.items){
+			this.items[id] = new this.Item(this.items[id]);
+		}
 	},
 	append(...args){
 		for (const arg of args){
@@ -62,6 +91,9 @@ const Collection = Base.extend("Collection", {
 		item.set({
 			coll: this
 		});
+
+		item.on("change", v => this.emit("change", item));
+
 		this.items[++this.length] = item;
 		this.emit("append", item);
 		return this;
@@ -85,6 +117,21 @@ const Collection = Base.extend("Collection", {
 		return new this.View({
 			coll: this
 		});
+	},
+	save(){
+		if (this.localID){
+			localStorage.setItem(this.localID, this.json());
+		} else {
+			throw "can't save w/o localID";
+		}
+	},
+	json(){
+		const json = {};
+		json.name = this.name;
+		json.items = {};
+		for (const id in this.items){
+			
+		}
 	}
 });
 

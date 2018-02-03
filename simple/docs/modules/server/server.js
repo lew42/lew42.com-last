@@ -16,4 +16,17 @@ define("server", ["logger"], function(require, exports, module){
 			log(e.data);
 		}
 	});
+
+	server.obj = function(obj){
+		server.send(JSON.stringify(obj));
+	};
+
+	server.mod = function(id){
+		server.obj({
+			action: "module.load",
+			data: {
+				module: id
+			}
+		});
+	};
 })
