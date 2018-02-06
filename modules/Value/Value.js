@@ -19,11 +19,11 @@ const Value = module.exports = Base.extend("Value", {
 			this.emit("change", value);
 		}
 	},
-	// render(){
-	// 	return new this.View({
-	// 		vo: this
-	// 	});
-	// }
+	render(){
+		return new this.View({
+			valueObject: this
+		});
+	}
 });
 
 }); // end

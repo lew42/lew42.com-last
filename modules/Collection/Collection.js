@@ -5,8 +5,8 @@ const Value = require("Value");
 
 const ItemView = View.extend("ItemView", {
 	render(){
-		this.attr("contenteditable", true);
-		this.append(this.item.value);
+		this.editable();
+		this.el.append(this.item.value);
 		this.hooks();
 	},
 	hooks(){

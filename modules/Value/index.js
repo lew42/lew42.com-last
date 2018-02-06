@@ -9,9 +9,9 @@ document.then = function(...args){
 
 await document;
 
-const val = new Value();
+const val = new Value("youuuu");
 val.on("change", console.log.bind(console));
-val.set("yo");
+// val.set("yo");
 
 val.render().appendTo(document.body);
 

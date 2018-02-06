@@ -313,10 +313,10 @@ const View = module.exports = Base.extend({
 		const hasAttr = this.el.hasAttribute("contenteditable");
 
 		if (remove && hasAttr){
-			console.warn(this.el, "remove ce");
+			// console.warn(this.el, "remove ce");
 			this.el.removeAttribute("contenteditable");
 		} else if (!remove && !hasAttr) {
-			console.warn(this.el, "add ce");
+			// console.warn(this.el, "add ce");
 			this.attr("contenteditable", true)
 		}
 		return this;
