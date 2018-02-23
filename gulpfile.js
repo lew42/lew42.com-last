@@ -27,7 +27,8 @@ var reloadWatchGlobs = [
 	"./simple/docs",
 	"./define/docs",
 	"!**/*.css",
-	"!.git", "!**/.git"
+	"!.git", "!**/.git",
+	"!**/*.json"
 ];
 
 for (const site of sites){
@@ -115,6 +116,7 @@ var simpleGlobs = [
 	simpleModule("mixin"),
 	__dirname + "/simple/docs/modules/Module/local/local.js",
 	simpleModule("Module"),
+	__dirname + "/simple/docs/modules/Module/JSONModule/JSONModule.js",
 	simpleModule("View"),
 	simpleModule("Test"),
 	simpleModule("server"),

@@ -40,6 +40,9 @@ const Item = Value.extend("Item", {
 			coll.emit("change", this);
 			coll.save();
 		});
+	},
+	data(){
+		return this.value;
 	}
 });
 
@@ -81,6 +84,7 @@ const Collection = Base.extend("Collection", {
 	instantiate(...args){
 		this.items = {};
 		this.length = 0;
+		this.set(...args);
 	},
 	set_items(items){
 		this.items = items;
@@ -135,23 +139,33 @@ const Collection = Base.extend("Collection", {
 			coll: this
 		});
 	},
-	save(){
+	save_local(){
 	console.log("saving");
 		if (this.localID){
-			localStorage.setItem(this.localID, this.json());
+			localStorage.setItem(this.localID, JSON.stringify(this.data()));
 		} else {
 			throw "can't save w/o localID";
 		}
 	},
-	json(){
-		const json = {};
-		json.name = this.name;
-		json.length = this.length;
-		json.items = {};
+	save(){
+		if (!this.save_path)
+			throw "must have save path";
+
+		server.send(JSON.stringify({
+			action: "save",
+			path: this.save_path,
+			data: JSON.stringify(this.data())
+		}));
+	},
+	data(){
+		const data = {};
+		data.name = this.name;
+		data.length = this.length;
+		data.items = {};
 		for (const id in this.items){
-			json.items[id] = this.items[id].value;
+			data.items[id] = this.items[id].value;
 		}
-		return JSON.stringify(json);
+		return data;
 	}
 });
 

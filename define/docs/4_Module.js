@@ -3,6 +3,9 @@ define.Module = class Module extends define.Base {
 	constructor(...args){
 		super();
 		this.constructor.emit("construct", this, args);
+		// const module = this.get(args[0]) || this.initialize();
+		// module.set(...args);
+		// return module;
 		return (this.get(args[0]) || this.initialize()).set(...args);
 	}
 
@@ -10,12 +13,16 @@ define.Module = class Module extends define.Base {
 		return typeof token === "string" && this.constructor.get(this.resolve(token));
 	}
 
+	switch(){
+		return false; // allow conditional check and return alternate class
+	}
+
 	initialize(...args){
 		this.ready = this.constructor.P();
 		this.dependencies = [];
 		this.dependents = [];
 
-		return this; // see instantiate()
+		return this; // see constructor()
 	}
 
 	exec(){
@@ -46,6 +53,7 @@ define.Module = class Module extends define.Base {
 
 		// mimic the base path
 		if (token === "."){
+			throw "does this even happen?";
 			if (!this.url)
 				throw "don't define with relative tokens";
 
@@ -82,28 +90,13 @@ define.Module = class Module extends define.Base {
 		return id;
 	}
 
-	import(token){
-		const module = new this.constructor(this.resolve(token));
-		module.register(this);
-
-		this.dependencies.push(module);
-		this.emit("dependency", module);
-		
-		return module.ready;
-	}
-
-	register(dependent){
-		this.dependents.push(dependent);
-		this.emit("dependent", dependent);
-
-		if (!this.factory && !this.queued && !this.requested)
-			this.queued = setTimeout(this.request.bind(this), 0);
-	}
 
 	require(token){
 		const module = this.get(token);
-		if (!module)
+		if (!module){
+			debugger;
 			throw "module not preloaded";
+		}
 		return module.exports;
 	}
 
@@ -156,6 +149,26 @@ define.Module = class Module extends define.Base {
 		this.deps = deps;
 	}
 
+	import(token){
+		// use this.constructor.get(); // `new` doesn't make much sense?
+			// buuut, it needs to either get it from the cache, OR initialize a blank module
+		const module = new this.constructor(this.resolve(token));
+		module.register(this);
+
+		this.dependencies.push(module);
+		this.emit("dependency", module);
+		
+		return module.ready;
+	}
+
+	register(dependent){
+		this.dependents.push(dependent);
+		this.emit("dependent", dependent);
+
+		if (!this.factory && !this.queued && !this.requested)
+			this.queued = setTimeout(this.request.bind(this), 0);
+	}
+
 	set_factory(factory){
 		if (this.factory)
 			throw "don't re-set factory fn";
@@ -194,6 +207,8 @@ define.Module = class Module extends define.Base {
 
 	// set(value) is forwarded here, when value is non-pojo 
 	set$(arg){
+		// if (this.constructor.name === "JSONModule")
+		// 	debugger;
 		if (typeof arg === "string")
 			this.set_token(arg);
 		else if (toString.call(arg) === '[object Array]')
@@ -229,7 +244,7 @@ define.Module = class Module extends define.Base {
 	static get(id){
 		if (!this.hasOwnProperty("modules"))
 			this.modules = {};
-		return this.modules[id]
+		return this.modules[id];
 	}
 
 	static set(id, module){

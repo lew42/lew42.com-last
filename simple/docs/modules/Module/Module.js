@@ -30,6 +30,7 @@ const Module = module.exports = Base.extend("Module", {
 
 Module.P = define.Module.P;
 Module.get = define.Module.get;
+// Module.modules = define.Module.modules || {};
 Module.set = define.Module.set;
 Module.url = define.Module.url;
 Module.path = "modules";
