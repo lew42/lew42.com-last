@@ -1,3 +1,4 @@
+debugger;
 var gulp = require("gulp");
 gulp.concat = require("gulp-concat");
 gulp.ejs = require("gulp-ejs");
@@ -28,7 +29,8 @@ var reloadWatchGlobs = [
 	"./define/docs",
 	"!**/*.css",
 	"!.git", "!**/.git",
-	"!**/*.json"
+	"!**/*.json",
+	"!modules/tests/file-explorer/test"
 ];
 
 for (const site of sites){
@@ -55,8 +57,10 @@ var server = function(){
 		server: server
 	});
 
+	var connection_count = 0;
+
 	wss.on("connection", function(ws){
-		console.log("connected");
+		console.log("connected", ++connection_count);
 		// console.log(ws);
 		// console.log(ws._socket);
 

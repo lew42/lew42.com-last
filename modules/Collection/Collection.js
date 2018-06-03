@@ -58,21 +58,34 @@ const AddChild = View.extend("AddChild", {
 		this.add = View({tag: "button"}, "add").click(() => this.submit());
 	},
 	submit(){
-		this.coll.tree.append(this.input.el.value);
+		this.coll.append(this.input.el.value);
 		this.input.el.value = "";
 	}
 });
 
 const CollectionView = View.extend("CollectionView", {
 	render(){
-		this.append("this is a CollectionView");
+		this.append("this is a CollectionView ", 
+			View({tag: "span"}, "empty()")
+				.click(() => {
+					this.coll.empty();
+					this.children.empty();
+				})
+		);
 
-		this.coll.on("append", v => this.append(v));
+		this.append({
+			children(){
+				for (const id in this.parent.coll.items){
+					this.append(this.parent.coll.items[id]);
+				}
+			}
+		});
+		this.coll.on("append", v => this.children.append(v));
 		// this.coll.on("append", v => this.append(v));
 
-		for (const id in this.coll.items){
-			this.append(this.coll.items[id]);
-		}
+		AddChild({
+			coll: this.coll
+		});
 	}
 });
 
@@ -139,6 +152,10 @@ const Collection = Base.extend("Collection", {
 			coll: this
 		});
 	},
+	empty(){
+		this.instantiate();
+		this.save();
+	},
 	save_local(){
 	console.log("saving");
 		if (this.localID){
@@ -151,11 +168,17 @@ const Collection = Base.extend("Collection", {
 		if (!this.save_path)
 			throw "must have save path";
 
-		server.send(JSON.stringify({
+		var payload = JSON.stringify({
 			action: "save",
 			path: this.save_path,
 			data: JSON.stringify(this.data())
-		}));
+		});
+
+		console.log("payload", payload);
+
+
+
+		server.send(payload);
 	},
 	data(){
 		const data = {};

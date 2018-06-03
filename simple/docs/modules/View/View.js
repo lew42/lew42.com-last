@@ -134,6 +134,7 @@ const View = module.exports = Base.extend({
 			.appendTo(this);
 
 		if (this.parent && !this.parent[prop]){
+			console.warn("over promotion probably not good");
 			this.parent[prop] = view;
 		}
 

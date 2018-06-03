@@ -38,9 +38,9 @@ const ModuleView = View.extend("ModuleView", {
 		const view = this;
 		views["view" + count] = this;
 		// console.log("view"+count);
-		this.module.on("resolved", () => {
-			if (this !== view)
-				debugger;
+		// this.module.on("resolved", () => {
+		// 	if (this !== view)
+		// 		debugger;
 
 		// this.module.on("pre-exec", () => {})
 		// this.module.on("executed", () => this.addClass("executed"));
@@ -49,6 +49,7 @@ const ModuleView = View.extend("ModuleView", {
 		const module = this.module;
 		
 		// console.group("appending");
+	// start
 		this.append({
 			preview: V(".flex", {
 				deps: module.dependencies.length,
@@ -90,10 +91,11 @@ const ModuleView = View.extend("ModuleView", {
 		this.preview.click(()=>{
 			this.contents.toggle();
 		});
+	// end
 		// console.groupEnd();
 
-		if (!this.history)
-			debugger;
+		// if (!this.history)
+		// 	debugger;
 
 	},
 	requested(){
