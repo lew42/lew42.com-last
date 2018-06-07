@@ -1,5 +1,6 @@
 // const fs = require("pify")(require('fs'));
 const fs = require("fs");
+const file_explorer = require("./file-explorer-service.js");
 
 module.exports = (ws) => {
 	ws.on("message", (data) => {
@@ -37,7 +38,11 @@ function action(ws, action, data){
 			}));
 			break;
 		case "save":
+		console.log("saving", data);
 			save(data);
+			break;
+		case "file-explorer":
+			file_explorer(ws, data);
 			break;
 	}
 }

@@ -1,0 +1,4 @@
+{
+	"test": 123,
+	"deps": ["./one.json", "./two.json"]
+}
