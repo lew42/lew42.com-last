@@ -3,10 +3,10 @@ define("Test", ["Base", "View"], function(require){
 	var Base = require("Base");
 	var View = require("View");
 	
-	var stylesheet = View({tag: "link"})
-		.attr("rel", "stylesheet")
-		.attr("href", "/simple/modules/Test/Test.css");
-	document.head.appendChild(stylesheet.el);
+	// var stylesheet = View({tag: "link"})
+	// 	.attr("rel", "stylesheet")
+	// 	.attr("href", "/simple/modules/Test/Test.css");
+	// document.head.appendChild(stylesheet.el);
 
 	var body = View({
 		el: document.body

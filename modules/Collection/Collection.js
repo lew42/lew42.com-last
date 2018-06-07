@@ -154,7 +154,7 @@ const Collection = Base.extend("Collection", {
 		server.send(JSON.stringify({
 			action: "save",
 			path: this.save_path,
-			data: JSON.stringify(this.data())
+			data: JSON.stringify(this.data(), null, 3)
 		}));
 	},
 	data(){
