@@ -21,9 +21,18 @@ export function thing(){}
 export default class View {
 	constructor(...args){
 		this.assign(...args);
-		this.el = document.createElement(this.tag);
+		this.prerender();
+		this.append(this.render);
 		this.initialize();
 	}
+
+	prerender(){
+		this.el = document.createElement(this.tag);
+		View.captor && View.captor.append(this);
+		this.classes && this.addClass(this.classes);
+	}
+
+	render(){}
 
 	initialize(){}
 
@@ -49,9 +58,13 @@ export default class View {
 	}
 
 	append_fn(fn){
+		View.set_captor(this);
 		const returnValue = fn.call(this, this);
+		View.restore_captor();
+
 		if (is.def(returnValue))
 			this.append(returnValue);
+
 		return this;
 	}
 
@@ -59,6 +72,7 @@ export default class View {
 		for (const prop in pojo){
 			this.append_prop(prop, pojo[prop]);
 		}
+		
 		return this;
 	}
 
@@ -108,11 +122,7 @@ export default class View {
 	}
 
 	click(cb){
-		// how do we remove this?
-		this.el.addEventListener("click", (...args) => {
-			cb.call(this, this, ...args);
-		});
-		return this;
+		return this.on("click", cb);
 	}
 
 	on(event, cb){
@@ -229,15 +239,14 @@ export default class View {
 
 	static get el(){
 		const self = this; // bind to current class
-		return function el(token, ...args){
-			if (!token)
-				throw "must provide element token";
+		return this._el || (this._el = function el(token, ...args){
+			if (!token) throw "must provide element token";
 			const tokenResults = parseToken(token);
 			return new self({ tag: tokenResults.tag })
 				.addClass(tokenResults.classes)
 				.append(...args);
 
-		};
+		});
 	}
 
 	static get package(){
@@ -246,7 +255,20 @@ export default class View {
 			b: "b"
 		}
 	}
+
+	static set_captor(view){
+		View.previous_captors.push(View.captor);
+		View.captor = view;
+	}
+
+	static restore_captor(){
+		View.captor = View.previous_captors.pop();
+	}
 }
+
+View.previous_captors = [];
+
+
 const el = View.el;
 export { el }
 
@@ -255,6 +277,13 @@ View.prototype.tag = "div";
 console.log(View.prototype);
 
 /*
+
+new View({ assign })
+div(".class.es", { append });
+el("tag.class.es", { append }, self => {});
+
+
+
 extend View if you need methods, otherwise View is setup to append everything?
 
 Or, maybe the basic View is as lean as possible?
